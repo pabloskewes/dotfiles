@@ -30,9 +30,18 @@ ln -sf ~/dotfiles/.bash_aliases ~/.bash_aliases
 
 ### VS Code Configuration
 
+For linux, the VS Code configuration files are stored in the `~/.config/Code/User` directory. Create symlinks to the settings and keybindings files in this repository:
+
 ```bash
 ln -sf ~/dotfiles/.vscode/settings.json ~/.config/Code/User/settings.json
 ln -sf ~/dotfiles/.vscode/keybindings.json ~/.config/Code/User/keybindings.json
+```
+
+For MacOS, the VS Code configuration files are stored in the `~/Library/Application Support/Code/User` directory. Create symlinks to the settings and keybindings files in this repository:
+
+```bash
+ln -sf ~/dotfiles/.vscode/settings.json ~/Library/Application\ Support/Code/User/settings.json
+ln -sf ~/dotfiles/.vscode/keybindings.json ~/Library/Application\ Support/Code/User/keybindings.json
 ```
 
 ## VS Code Configuration
