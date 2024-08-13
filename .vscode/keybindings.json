@@ -1,0 +1,26 @@
+[
+    {
+        "key": "ctrl+b",
+        "command": "editor.action.insertSnippet",
+        "args": {
+            "snippet": "\\textbf{${TM_SELECTED_TEXT:${1:\\<cursor-here>}}}"
+        },
+        "when": "editorTextFocus && !editorReadonly"
+    },
+    {
+        "key": "ctrl+i",
+        "command": "editor.action.insertSnippet",
+        "args": {
+            "snippet": "\\textit{${TM_SELECTED_TEXT:${1:\\<cursor-here>}}}"
+        },
+        "when": "editorTextFocus && !editorReadonly"
+    },
+    {
+        "key": "ctrl+u",
+        "command": "editor.action.insertSnippet",
+        "args": {
+            "snippet": "\\underline{${TM_SELECTED_TEXT:${1:\\<cursor-here>}}}"
+        },
+        "when": "editorTextFocus && !editorReadonly"
+    }
+]

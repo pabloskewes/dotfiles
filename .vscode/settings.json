@@ -1,0 +1,59 @@
+{
+    "workbench.colorTheme": "Darcula",
+
+    "[python]": {
+        "editor.formatOnType": true,
+        "editor.defaultFormatter": "ms-python.black-formatter"
+    },
+
+    "explorer.confirmDragAndDrop": false,
+
+    "editor.inlineSuggest.enabled": true,
+    "github.copilot.enable": {
+        "*": true,
+        "plaintext": true,
+        "markdown": true,
+        "scminput": false,
+        "yaml": true
+    },
+    "github.copilot.advanced": {},
+    "github.copilot.editor.enableAutoCompletions": true,
+    "github.copilot.preferredAccount": "pabloskewes",
+
+    "excalidraw.theme": "dark",
+
+    "[dockerfile]": {
+        "editor.defaultFormatter": "ms-azuretools.vscode-docker"
+    },
+
+    "terminal.integrated.enableMultiLinePasteWarning": "never",
+
+    "files.associations": {
+        "*.excalidraw": "json",
+        "*.excalidrawlib": "json",
+        "*.rmd": "markdown"
+    },
+
+    "cmake.configureOnOpen": true,
+
+    "jupyter.askForKernelRestart": false,
+    "liveshare.notebooks.allowGuestExecuteCells": true,
+
+    "workbench.editorAssociations": {
+        "{git,gitlens}:/**/*.{md,csv}": "default",
+        "{git,gitlens}:/**/*.{md,csv,svg}": "default",
+        "*.md": "default"
+    },
+
+    "editor.wordWrap": "on",
+
+    "[typescript]": {
+        "editor.defaultFormatter": "esbenp.prettier-vscode"
+    },
+
+    "[json]": {
+        "editor.defaultFormatter": "esbenp.prettier-vscode"
+    },
+
+    "markdown.extension.toc.updateOnSave": false
+}
