@@ -8,6 +8,7 @@ This repository contains my personal dotfiles and configuration files for settin
 - [Creating Symlinks](#creating-symlinks)
 - [VS Code Configuration](#vs-code-configuration)
 - [VS Code Extensions](#vs-code-extensions)
+- [Git Configuration](#git-configuration)
 
 ## Cloning the Repository
 
@@ -30,18 +31,26 @@ ln -sf ~/dotfiles/.bash_aliases ~/.bash_aliases
 
 ### VS Code Configuration
 
-For linux, the VS Code configuration files are stored in the `~/.config/Code/User` directory. Create symlinks to the settings and keybindings files in this repository:
+For Linux, the VS Code configuration files are stored in the `~/.config/Code/User` directory. Create symlinks to the settings and keybindings files in this repository:
 
 ```bash
 ln -sf ~/dotfiles/.vscode/settings.json ~/.config/Code/User/settings.json
 ln -sf ~/dotfiles/.vscode/keybindings.json ~/.config/Code/User/keybindings.json
 ```
 
-For MacOS, the VS Code configuration files are stored in the `~/Library/Application Support/Code/User` directory. Create symlinks to the settings and keybindings files in this repository:
+For macOS, the VS Code configuration files are stored in the `~/Library/Application Support/Code/User` directory. Create symlinks to the settings and keybindings files in this repository:
 
 ```bash
 ln -sf ~/dotfiles/.vscode/settings.json ~/Library/Application\ Support/Code/User/settings.json
 ln -sf ~/dotfiles/.vscode/keybindings.json ~/Library/Application\ Support/Code/User/keybindings.json
+```
+
+### Git Configuration
+
+To manage your Git configuration across multiple systems, store the `.gitconfig` file in your dotfiles repository and create a symlink:
+
+```bash
+ln -sf ~/dotfiles/.gitconfig ~/.gitconfig
 ```
 
 ## VS Code Configuration
@@ -84,7 +93,7 @@ cat ~/dotfiles/.vscode/extensions.txt | grep -v '^#' | xargs -n 1 code --install
 
 ### Commented Extensions List
 
-The `extensions.txt` file includes comments explaining the purpose of each extension. These comments are ignored when running the installation command. 
+The `extensions.txt` file includes comments explaining the purpose of each extension. These comments are ignored when running the installation command.
 
 ```plaintext
 # SQL Formatter
