@@ -84,7 +84,7 @@ Host github-scopeo
 
 #### Using Git Aliases
 
-To streamline your workflow, you can set up Git aliases that allow you to clone repositories using the appropriate SSH key without manually specifying the full URL. Add the following aliases to your Git configuration (`~/.gitconfig`):
+To streamline your workflow, this repository includes Git aliases that allow you to clone repositories using the appropriate SSH key without manually specifying the full URL:
 
 ```plaintext
 [alias]
@@ -92,7 +92,7 @@ To streamline your workflow, you can set up Git aliases that allow you to clone 
     clone-scopeo = "!f() { git clone git@github-scopeo:$1.git; }; f"
 ```
 
-This allows you to clone repositories with a simple command:
+These aliases allow you to quickly clone repositories based on your SSH configuration:
 
 - **For personal repositories**:
   ```bash
@@ -103,6 +103,7 @@ This allows you to clone repositories with a simple command:
   ```bash
   git clone-scopeo some-repo
   ```
+
 
 #### Summary
 
