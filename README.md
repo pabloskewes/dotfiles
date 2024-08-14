@@ -9,6 +9,7 @@ This repository contains my personal dotfiles and configuration files for settin
 - [VS Code Configuration](#vs-code-configuration)
 - [VS Code Extensions](#vs-code-extensions)
 - [Git Configuration](#git-configuration)
+- [Karabiner Configuration](#karabiner-configuration)
 
 ## Cloning the Repository
 
