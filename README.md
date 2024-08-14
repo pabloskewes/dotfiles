@@ -54,6 +54,47 @@ To manage your Git configuration across multiple systems, store the `.gitconfig`
 ln -sf ~/dotfiles/.gitconfig ~/.gitconfig
 ```
 
+## SSH Configuration
+
+To manage multiple GitHub accounts (e.g., personal and work) using SSH, you can set up SSH configuration aliases. This allows you to easily switch between accounts based on the folder or project you're working on.
+
+### SSH Config Setup
+
+Add the following configuration to your `~/.ssh/config` file:
+
+```plaintext
+# Personal GitHub account
+Host github         
+  HostName github.com
+  User git
+  IdentityFile ~/.ssh/id_rsa_personal
+
+# Work GitHub account
+Host github-scopeo
+  HostName github.com
+  User git
+  IdentityFile ~/.ssh/id_rsa_scopeo
+```
+
+### Usage
+
+When cloning or working with repositories, use the following patterns to ensure the correct SSH key is used:
+
+- **For personal repositories**:
+  ```bash
+  git clone git@github:username/repository.git
+  ```
+
+- **For work repositories**:
+  ```bash
+  git clone git@github-scopeo:username/repository.git
+  ```
+
+### Summary
+
+Ensure that the `Host` names in your SSH config (`github` and `github-scopeo`) match the aliases used in your Git remote URLs. If you've already cloned a repository, update the remote URL to use the correct alias to ensure the right SSH key is used.
+
+
 ## VS Code Configuration
 
 ### Settings
