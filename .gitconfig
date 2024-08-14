@@ -8,5 +8,5 @@
 	email = pablo.skewes@ug.uchile.cl
 
 [alias]
-    clone-personal = "!f() { git clone git@github:$1.git; }; f"
-    clone-scopeo = "!f() { git clone git@github-scopeo:$1.git; }; f"
+    clone-personal = "!f() { git clone git@github:$1; }; f"
+    clone-scopeo = "!f() { git clone git@github-scopeo:$1; }; f"
