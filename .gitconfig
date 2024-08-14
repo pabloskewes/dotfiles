@@ -1,0 +1,12 @@
+[filter "lfs"]
+	clean = git-lfs clean -- %f
+	smudge = git-lfs smudge -- %f
+	process = git-lfs filter-process
+	required = true
+[user]
+	name = Pablo Skewes
+	email = pablo.skewes@ug.uchile.cl
+
+[alias]
+    clone-personal = "!f() { git clone git@github:$1.git; }; f"
+    clone-work = "!f() { git clone git@github-scopeo:$1.git; }; f"
