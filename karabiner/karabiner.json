@@ -73,7 +73,7 @@
                         ]
                     },
                     {
-                        "description": "Map Fn + W to Command + Q for MacBook and Ctrl + W to Command + Q for USB Keyboard",
+                        "description": "Map Fn + Shift + W to Command + Q for MacBook and Ctrl + Shift + W to Command + Q for USB Keyboard",
                         "manipulators": [
                             {
                                 "conditions": [
@@ -89,7 +89,7 @@
                                 ],
                                 "from": {
                                     "key_code": "w",
-                                    "modifiers": { "mandatory": ["fn"] }
+                                    "modifiers": { "mandatory": ["fn", "shift"] }
                                 },
                                 "to": [
                                     {
@@ -113,11 +113,64 @@
                                 ],
                                 "from": {
                                     "key_code": "w",
-                                    "modifiers": { "mandatory": ["control"] }
+                                    "modifiers": { "mandatory": ["control", "shift"] }
                                 },
                                 "to": [
                                     {
                                         "key_code": "q",
+                                        "modifiers": ["command"]
+                                    }
+                                ],
+                                "type": "basic"
+                            }
+                        ]
+                    },
+                    {
+                        "description": "Map Fn + W to Command + W for MacBook and Ctrl + W to Command + W for USB Keyboard",
+                        "manipulators": [
+                            {
+                                "conditions": [
+                                    {
+                                        "identifiers": [
+                                            {
+                                                "product_id": 641,
+                                                "vendor_id": 1452
+                                            }
+                                        ],
+                                        "type": "device_if"
+                                    }
+                                ],
+                                "from": {
+                                    "key_code": "w",
+                                    "modifiers": { "mandatory": ["fn"] }
+                                },
+                                "to": [
+                                    {
+                                        "key_code": "w",
+                                        "modifiers": ["command"]
+                                    }
+                                ],
+                                "type": "basic"
+                            },
+                            {
+                                "conditions": [
+                                    {
+                                        "identifiers": [
+                                            {
+                                                "product_id": 3620,
+                                                "vendor_id": 6700
+                                            }
+                                        ],
+                                        "type": "device_if"
+                                    }
+                                ],
+                                "from": {
+                                    "key_code": "w",
+                                    "modifiers": { "mandatory": ["control"] }
+                                },
+                                "to": [
+                                    {
+                                        "key_code": "w",
                                         "modifiers": ["command"]
                                     }
                                 ],
