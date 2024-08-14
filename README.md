@@ -6,9 +6,15 @@ This repository contains my personal dotfiles and configuration files for settin
 
 - [Cloning the Repository](#cloning-the-repository)
 - [Creating Symlinks](#creating-symlinks)
-- [VS Code Configuration](#vs-code-configuration)
-- [VS Code Extensions](#vs-code-extensions)
+  - [Bash Configuration](#bash-configuration)
+  - [VS Code Configuration](#vs-code-configuration)
 - [Git Configuration](#git-configuration)
+  - [SSH Configuration](#ssh-configuration)
+- [VS Code Configuration](#vs-code-configuration)
+  - [Settings](#settings)
+  - [Keybindings](#keybindings)
+  - [Custom Settings](#custom-settings)
+- [VS Code Extensions](#vs-code-extensions)
 - [Karabiner Configuration](#karabiner-configuration)
 
 ## Cloning the Repository
@@ -46,7 +52,7 @@ ln -sf ~/dotfiles/.vscode/settings.json ~/Library/Application\ Support/Code/User
 ln -sf ~/dotfiles/.vscode/keybindings.json ~/Library/Application\ Support/Code/User/keybindings.json
 ```
 
-### Git Configuration
+## Git Configuration
 
 To manage your Git configuration across multiple systems, store the `.gitconfig` file in your dotfiles repository and create a symlink:
 
@@ -54,11 +60,11 @@ To manage your Git configuration across multiple systems, store the `.gitconfig`
 ln -sf ~/dotfiles/.gitconfig ~/.gitconfig
 ```
 
-## SSH Configuration
+### SSH Configuration
 
 To manage multiple GitHub accounts (e.g., personal and work) using SSH, you can set up SSH configuration aliases. This allows you to easily switch between accounts based on the folder or project you're working on.
 
-### SSH Config Setup
+#### SSH Config Setup
 
 Add the following configuration to your `~/.ssh/config` file:
 
@@ -76,24 +82,31 @@ Host github-scopeo
   IdentityFile ~/.ssh/id_rsa_scopeo
 ```
 
-### Usage
+#### Using Git Aliases
 
-When cloning or working with repositories, use the following patterns to ensure the correct SSH key is used:
+To streamline your workflow, you can set up Git aliases that allow you to clone repositories using the appropriate SSH key without manually specifying the full URL. Add the following aliases to your Git configuration (`~/.gitconfig`):
+
+```plaintext
+[alias]
+    clone-personal = "!f() { git clone git@github:$1.git; }; f"
+    clone-scopeo = "!f() { git clone git@github-scopeo:$1.git; }; f"
+```
+
+This allows you to clone repositories with a simple command:
 
 - **For personal repositories**:
   ```bash
-  git clone git@github:username/repository.git
+  git clone-personal some-repo
   ```
 
 - **For work repositories**:
   ```bash
-  git clone git@github-scopeo:username/repository.git
+  git clone-scopeo some-repo
   ```
 
-### Summary
+#### Summary
 
 Ensure that the `Host` names in your SSH config (`github` and `github-scopeo`) match the aliases used in your Git remote URLs. If you've already cloned a repository, update the remote URL to use the correct alias to ensure the right SSH key is used.
-
 
 ## VS Code Configuration
 
