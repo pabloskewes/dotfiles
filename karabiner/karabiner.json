@@ -73,7 +73,7 @@
                         ]
                     },
                     {
-                        "description": "Map Fn + W to Command + W for MacBook and Ctrl + W to Command + W for USB Keyboard",
+                        "description": "Map Fn + W to Command + Q for MacBook and Ctrl + W to Command + Q for USB Keyboard",
                         "manipulators": [
                             {
                                 "conditions": [
@@ -93,7 +93,7 @@
                                 },
                                 "to": [
                                     {
-                                        "key_code": "w",
+                                        "key_code": "q",
                                         "modifiers": ["command"]
                                     }
                                 ],
@@ -117,7 +117,7 @@
                                 },
                                 "to": [
                                     {
-                                        "key_code": "w",
+                                        "key_code": "q",
                                         "modifiers": ["command"]
                                     }
                                 ],
