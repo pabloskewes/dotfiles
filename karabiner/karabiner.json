@@ -267,6 +267,26 @@
                 "type": "basic"
               }
             ]
+          },
+          {
+            "description": "Map Fn + 1 to screenshot selected area to clipboard (Command + Control + Shift + 4)",
+            "manipulators": [
+              {
+                "from": {
+                  "key_code": "1",
+                  "modifiers": {
+                    "mandatory": ["fn"]
+                  }
+                },
+                "to": [
+                  {
+                    "key_code": "4",
+                    "modifiers": ["command", "control", "shift"]
+                  }
+                ],
+                "type": "basic"
+              }
+            ]
           }
         ]
       },
