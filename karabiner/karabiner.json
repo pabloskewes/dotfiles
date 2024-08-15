@@ -237,6 +237,36 @@
                 "type": "basic"
               }
             ]
+          },
+          {
+            "description": "Map Command + X to Cut files in Finder",
+            "manipulators": [
+              {
+                "conditions": [
+                  {
+                    "bundle_identifiers": ["^com\\.apple\\.finder$"],
+                    "type": "frontmost_application_if"
+                  }
+                ],
+                "from": {
+                  "key_code": "x",
+                  "modifiers": {
+                    "mandatory": ["command"]
+                  }
+                },
+                "to": [
+                  {
+                    "key_code": "c",
+                    "modifiers": ["command"]
+                  },
+                  {
+                    "key_code": "v",
+                    "modifiers": ["command", "option"]
+                  }
+                ],
+                "type": "basic"
+              }
+            ]
           }
         ]
       },
