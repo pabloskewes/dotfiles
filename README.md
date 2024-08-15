@@ -168,3 +168,26 @@ The Karabiner configuration file is stored in `~/.config/karabiner/karabiner.jso
 ```bash
 ln -sf ~/dotfiles/.config/karabiner/karabiner.json ~/.config/karabiner/karabiner.json
 ```
+
+- **Invert Alt (Option) and Command keys**
+  - **USB Keyboard:** Swaps `Alt (Option)` and `Command` keys.
+
+- **Close Application**
+  - **MacBook keyboard:** `Fn + Shift + W` ⟶ `Command + Q`
+  - **USB Keyboard:** `Ctrl + Shift + W` ⟶ `Command + Q`
+
+- **Close Window**
+  - **MacBook keyboard:** `Fn + W` ⟶ `Command + W`
+  - **USB Keyboard:** `Ctrl + W` ⟶ `Command + W`
+
+- **Open Terminal**
+  - `Ctrl + RAlt + T` or `Ctrl + LAlt + T`
+
+- **Show Desktop**
+  - `Command + D` ⟶ `Fn + F11`
+
+- **Cut Files in Finder**
+  - `Command + X` ⟶ Cut files
+
+- **Screenshot Selected Area to Clipboard**
+  - `Fn + 1` ⟶ `Command + Control + Shift + 4`
