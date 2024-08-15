@@ -1,237 +1,247 @@
 {
-    "profiles": [
-        {
-            "complex_modifications": {
-                "rules": [
-                    {
-                        "description": "Invert Alt (Option) and Command keys for USB Keyboard",
-                        "manipulators": [
-                            {
-                                "conditions": [
-                                    {
-                                        "identifiers": [
-                                            {
-                                                "product_id": 3620,
-                                                "vendor_id": 6700
-                                            }
-                                        ],
-                                        "type": "device_if"
-                                    }
-                                ],
-                                "from": { "key_code": "left_option" },
-                                "to": [{ "key_code": "left_command" }],
-                                "type": "basic"
-                            },
-                            {
-                                "conditions": [
-                                    {
-                                        "identifiers": [
-                                            {
-                                                "product_id": 3620,
-                                                "vendor_id": 6700
-                                            }
-                                        ],
-                                        "type": "device_if"
-                                    }
-                                ],
-                                "from": { "key_code": "left_command" },
-                                "to": [{ "key_code": "left_option" }],
-                                "type": "basic"
-                            },
-                            {
-                                "conditions": [
-                                    {
-                                        "identifiers": [
-                                            {
-                                                "product_id": 3620,
-                                                "vendor_id": 6700
-                                            }
-                                        ],
-                                        "type": "device_if"
-                                    }
-                                ],
-                                "from": { "key_code": "right_option" },
-                                "to": [{ "key_code": "right_command" }],
-                                "type": "basic"
-                            },
-                            {
-                                "conditions": [
-                                    {
-                                        "identifiers": [
-                                            {
-                                                "product_id": 3620,
-                                                "vendor_id": 6700
-                                            }
-                                        ],
-                                        "type": "device_if"
-                                    }
-                                ],
-                                "from": { "key_code": "right_command" },
-                                "to": [{ "key_code": "right_option" }],
-                                "type": "basic"
-                            }
-                        ]
-                    },
-                    {
-                        "description": "Map Fn + Shift + W to Command + Q for MacBook and Ctrl + Shift + W to Command + Q for USB Keyboard",
-                        "manipulators": [
-                            {
-                                "conditions": [
-                                    {
-                                        "identifiers": [
-                                            {
-                                                "product_id": 641,
-                                                "vendor_id": 1452
-                                            }
-                                        ],
-                                        "type": "device_if"
-                                    }
-                                ],
-                                "from": {
-                                    "key_code": "w",
-                                    "modifiers": { "mandatory": ["fn", "shift"] }
-                                },
-                                "to": [
-                                    {
-                                        "key_code": "q",
-                                        "modifiers": ["command"]
-                                    }
-                                ],
-                                "type": "basic"
-                            },
-                            {
-                                "conditions": [
-                                    {
-                                        "identifiers": [
-                                            {
-                                                "product_id": 3620,
-                                                "vendor_id": 6700
-                                            }
-                                        ],
-                                        "type": "device_if"
-                                    }
-                                ],
-                                "from": {
-                                    "key_code": "w",
-                                    "modifiers": { "mandatory": ["control", "shift"] }
-                                },
-                                "to": [
-                                    {
-                                        "key_code": "q",
-                                        "modifiers": ["command"]
-                                    }
-                                ],
-                                "type": "basic"
-                            }
-                        ]
-                    },
-                    {
-                        "description": "Map Fn + W to Command + W for MacBook and Ctrl + W to Command + W for USB Keyboard",
-                        "manipulators": [
-                            {
-                                "conditions": [
-                                    {
-                                        "identifiers": [
-                                            {
-                                                "product_id": 641,
-                                                "vendor_id": 1452
-                                            }
-                                        ],
-                                        "type": "device_if"
-                                    }
-                                ],
-                                "from": {
-                                    "key_code": "w",
-                                    "modifiers": { "mandatory": ["fn"] }
-                                },
-                                "to": [
-                                    {
-                                        "key_code": "w",
-                                        "modifiers": ["command"]
-                                    }
-                                ],
-                                "type": "basic"
-                            },
-                            {
-                                "conditions": [
-                                    {
-                                        "identifiers": [
-                                            {
-                                                "product_id": 3620,
-                                                "vendor_id": 6700
-                                            }
-                                        ],
-                                        "type": "device_if"
-                                    }
-                                ],
-                                "from": {
-                                    "key_code": "w",
-                                    "modifiers": { "mandatory": ["control"] }
-                                },
-                                "to": [
-                                    {
-                                        "key_code": "w",
-                                        "modifiers": ["command"]
-                                    }
-                                ],
-                                "type": "basic"
-                            }
-                        ]
-                    },
-                    {
-                      "description": "Open a terminal window with Ctrl-RAlt-T",
-                      "manipulators": [
-                          {
-                              "from": {
-                                  "key_code": "t",
-                                  "modifiers": {
-                                      "mandatory": [
-                                          "left_control",
-                                          "right_option"
-                                      ],
-                                      "optional": [
-                                          "caps_lock"
-                                      ]
-                                  }
-                              },
-                              "to": [
-                                  {
-                                      "shell_command": "open -a Terminal ~"
-                                  }
-                              ],
-                              "type": "basic"
-                          }
-                      ]
-                    },
-                    {
-                      "description": "Open a terminal window with Ctrl-LAlt-T",
-                      "manipulators": [
-                          {
-                              "from": {
-                                  "key_code": "t",
-                                  "modifiers": {
-                                      "mandatory": [
-                                          "left_control",
-                                          "left_option"
-                                      ],
-                                      "optional": [
-                                          "caps_lock"
-                                      ]
-                                  }
-                              },
-                              "to": [
-                                  {
-                                      "shell_command": "open -a Terminal ~"
-                                  }
-                              ],
-                              "type": "basic"
-                          }
-                      ]
-                    }
-                ]
-            },
-            "name": "Default profile",
-            "selected": true
-        }
-    ]
+  "profiles": [
+    {
+      "complex_modifications": {
+        "rules": [
+          {
+            "description": "Invert Alt (Option) and Command keys for USB Keyboard",
+            "manipulators": [
+              {
+                "conditions": [
+                  {
+                    "identifiers": [
+                      {
+                        "product_id": 3620,
+                        "vendor_id": 6700
+                      }
+                    ],
+                    "type": "device_if"
+                  }
+                ],
+                "from": { "key_code": "left_option" },
+                "to": [{ "key_code": "left_command" }],
+                "type": "basic"
+              },
+              {
+                "conditions": [
+                  {
+                    "identifiers": [
+                      {
+                        "product_id": 3620,
+                        "vendor_id": 6700
+                      }
+                    ],
+                    "type": "device_if"
+                  }
+                ],
+                "from": { "key_code": "left_command" },
+                "to": [{ "key_code": "left_option" }],
+                "type": "basic"
+              },
+              {
+                "conditions": [
+                  {
+                    "identifiers": [
+                      {
+                        "product_id": 3620,
+                        "vendor_id": 6700
+                      }
+                    ],
+                    "type": "device_if"
+                  }
+                ],
+                "from": { "key_code": "right_option" },
+                "to": [{ "key_code": "right_command" }],
+                "type": "basic"
+              },
+              {
+                "conditions": [
+                  {
+                    "identifiers": [
+                      {
+                        "product_id": 3620,
+                        "vendor_id": 6700
+                      }
+                    ],
+                    "type": "device_if"
+                  }
+                ],
+                "from": { "key_code": "right_command" },
+                "to": [{ "key_code": "right_option" }],
+                "type": "basic"
+              }
+            ]
+          },
+          {
+            "description": "Map Fn + Shift + W to Command + Q for MacBook and Ctrl + Shift + W to Command + Q for USB Keyboard",
+            "manipulators": [
+              {
+                "conditions": [
+                  {
+                    "identifiers": [
+                      {
+                        "product_id": 641,
+                        "vendor_id": 1452
+                      }
+                    ],
+                    "type": "device_if"
+                  }
+                ],
+                "from": {
+                  "key_code": "w",
+                  "modifiers": { "mandatory": ["fn", "shift"] }
+                },
+                "to": [
+                  {
+                    "key_code": "q",
+                    "modifiers": ["command"]
+                  }
+                ],
+                "type": "basic"
+              },
+              {
+                "conditions": [
+                  {
+                    "identifiers": [
+                      {
+                        "product_id": 3620,
+                        "vendor_id": 6700
+                      }
+                    ],
+                    "type": "device_if"
+                  }
+                ],
+                "from": {
+                  "key_code": "w",
+                  "modifiers": { "mandatory": ["control", "shift"] }
+                },
+                "to": [
+                  {
+                    "key_code": "q",
+                    "modifiers": ["command"]
+                  }
+                ],
+                "type": "basic"
+              }
+            ]
+          },
+          {
+            "description": "Map Fn + W to Command + W for MacBook and Ctrl + W to Command + W for USB Keyboard",
+            "manipulators": [
+              {
+                "conditions": [
+                  {
+                    "identifiers": [
+                      {
+                        "product_id": 641,
+                        "vendor_id": 1452
+                      }
+                    ],
+                    "type": "device_if"
+                  }
+                ],
+                "from": {
+                  "key_code": "w",
+                  "modifiers": { "mandatory": ["fn"] }
+                },
+                "to": [
+                  {
+                    "key_code": "w",
+                    "modifiers": ["command"]
+                  }
+                ],
+                "type": "basic"
+              },
+              {
+                "conditions": [
+                  {
+                    "identifiers": [
+                      {
+                        "product_id": 3620,
+                        "vendor_id": 6700
+                      }
+                    ],
+                    "type": "device_if"
+                  }
+                ],
+                "from": {
+                  "key_code": "w",
+                  "modifiers": { "mandatory": ["control"] }
+                },
+                "to": [
+                  {
+                    "key_code": "w",
+                    "modifiers": ["command"]
+                  }
+                ],
+                "type": "basic"
+              }
+            ]
+          },
+          {
+            "description": "Open a terminal window with Ctrl-RAlt-T",
+            "manipulators": [
+              {
+                "from": {
+                  "key_code": "t",
+                  "modifiers": {
+                    "mandatory": ["left_control", "right_option"],
+                    "optional": ["caps_lock"]
+                  }
+                },
+                "to": [
+                  {
+                    "shell_command": "open -a Terminal ~"
+                  }
+                ],
+                "type": "basic"
+              }
+            ]
+          },
+          {
+            "description": "Open a terminal window with Ctrl-LAlt-T",
+            "manipulators": [
+              {
+                "from": {
+                  "key_code": "t",
+                  "modifiers": {
+                    "mandatory": ["left_control", "left_option"],
+                    "optional": ["caps_lock"]
+                  }
+                },
+                "to": [
+                  {
+                    "shell_command": "open -a Terminal ~"
+                  }
+                ],
+                "type": "basic"
+              }
+            ]
+          },
+          {
+            "description": "Map Command + D to Show Desktop (F11)",
+            "manipulators": [
+              {
+                "from": {
+                  "key_code": "d",
+                  "modifiers": {
+                    "mandatory": ["command"]
+                  }
+                },
+                "to": [
+                  {
+                    "key_code": "f11",
+                    "modifiers": ["fn"]
+                  }
+                ],
+                "type": "basic"
+              }
+            ]
+          }
+        ]
+      },
+      "name": "Default profile",
+      "selected": true
+    }
+  ]
 }
