@@ -56,5 +56,6 @@
     },
 
     "markdown.extension.toc.updateOnSave": false,
-    "git.enableSmartCommit": true
+    "git.enableSmartCommit": true,
+    "git.confirmSync": false
 }
