@@ -55,5 +55,6 @@
         "editor.defaultFormatter": "esbenp.prettier-vscode"
     },
 
-    "markdown.extension.toc.updateOnSave": false
+    "markdown.extension.toc.updateOnSave": false,
+    "git.enableSmartCommit": true
 }
