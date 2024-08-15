@@ -3,7 +3,8 @@
 
     "[python]": {
         "editor.formatOnType": true,
-        "editor.defaultFormatter": "ms-python.black-formatter"
+        "editor.defaultFormatter": "ms-python.black-formatter",
+        "editor.formatOnSave": true
     },
 
     "explorer.confirmDragAndDrop": false,
@@ -23,7 +24,8 @@
     "excalidraw.theme": "dark",
 
     "[dockerfile]": {
-        "editor.defaultFormatter": "ms-azuretools.vscode-docker"
+        "editor.defaultFormatter": "ms-azuretools.vscode-docker",
+        "editor.formatOnSave": true
     },
 
     "terminal.integrated.enableMultiLinePasteWarning": "never",
@@ -48,14 +50,18 @@
     "editor.wordWrap": "on",
 
     "[typescript]": {
-        "editor.defaultFormatter": "esbenp.prettier-vscode"
+        "editor.defaultFormatter": "esbenp.prettier-vscode",
+        "editor.formatOnSave": true
     },
 
     "[json]": {
-        "editor.defaultFormatter": "esbenp.prettier-vscode"
+        "editor.defaultFormatter": "esbenp.prettier-vscode",
+        "editor.formatOnSave": true
     },
 
     "markdown.extension.toc.updateOnSave": false,
     "git.enableSmartCommit": true,
-    "git.confirmSync": false
+    "git.confirmSync": false,
+
+    "editor.formatOnSave": true
 }
