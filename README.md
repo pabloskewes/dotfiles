@@ -16,6 +16,7 @@ This repository contains my personal dotfiles and configuration files for settin
   - [Custom Settings](#custom-settings)
 - [VS Code Extensions](#vs-code-extensions)
 - [Karabiner Configuration](#karabiner-configuration)
+  - [Custom Keybindings](#custom-keybindings)
 
 ## Cloning the Repository
 
@@ -168,6 +169,8 @@ The Karabiner configuration file is stored in `~/.config/karabiner/karabiner.jso
 ```bash
 ln -sf ~/dotfiles/.config/karabiner/karabiner.json ~/.config/karabiner/karabiner.json
 ```
+
+### Custom Keybindings
 
 - **Invert Alt (Option) and Command keys**
   - **USB Keyboard:** Swaps `Alt (Option)` and `Command` keys.
