@@ -285,6 +285,18 @@
                   }
                 ],
                 "type": "basic"
+              },
+              {
+                "from": {
+                  "key_code": "print_screen"
+                },
+                "to": [
+                  {
+                    "key_code": "4",
+                    "modifiers": ["command", "control", "shift"]
+                  }
+                ],
+                "type": "basic"
               }
             ]
           }
