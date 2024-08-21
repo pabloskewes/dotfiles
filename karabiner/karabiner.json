@@ -299,6 +299,113 @@
                 "type": "basic"
               }
             ]
+          },
+          {
+            "description": "Map non_us_backslash and grave_accent_and_tilde to < and > based on keyboard type",
+            "manipulators": [
+              {
+                "conditions": [
+                  {
+                    "identifiers": [
+                      {
+                        "product_id": 641,
+                        "vendor_id": 1452
+                      }
+                    ],
+                    "type": "device_if"
+                  }
+                ],
+                "from": { "key_code": "grave_accent_and_tilde" },
+                "to": [
+                  {
+                    "shell_command": "printf '<' | pbcopy"
+                  }
+                ],
+                "to_after_key_up": {
+                  "key_code": "v",
+                  "modifiers": ["left_command"]
+                },
+                "type": "basic"
+              },
+              {
+                "conditions": [
+                  {
+                    "identifiers": [
+                      {
+                        "product_id": 641,
+                        "vendor_id": 1452
+                      }
+                    ],
+                    "type": "device_if"
+                  }
+                ],
+                "from": {
+                  "key_code": "grave_accent_and_tilde",
+                  "modifiers": { "mandatory": ["shift"] }
+                },
+                "to": [
+                  {
+                    "shell_command": "printf '>' | pbcopy"
+                  }
+                ],
+                "to_after_key_up": {
+                  "key_code": "v",
+                  "modifiers": ["left_command"]
+                },
+                "type": "basic"
+              },
+              {
+                "conditions": [
+                  {
+                    "identifiers": [
+                      {
+                        "product_id": 3620,
+                        "vendor_id": 6700
+                      }
+                    ],
+                    "type": "device_if"
+                  }
+                ],
+                "from": { "key_code": "non_us_backslash" },
+                "to": [
+                  {
+                    "shell_command": "printf '<' | pbcopy"
+                  }
+                ],
+                "to_after_key_up": {
+                  "key_code": "v",
+                  "modifiers": ["left_command"]
+                },
+                "type": "basic"
+              },
+              {
+                "conditions": [
+                  {
+                    "identifiers": [
+                      {
+                        "product_id": 3620,
+                        "vendor_id": 6700
+                      }
+                    ],
+                    "type": "device_if"
+                  }
+                ],
+                "from": {
+                  "key_code": "non_us_backslash",
+                  "modifiers": { "mandatory": ["shift"] }
+                },
+                "to": [
+                  {
+                    "shell_command": "printf '>' | pbcopy"
+                  }
+                ],
+                "to_after_key_up": {
+                  "key_code": "v",
+                  "modifiers": ["left_command"]
+                },
+                "type": "basic"
+              }
+            ]
           }
         ]
       },
