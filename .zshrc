@@ -109,8 +109,5 @@ eval "$(pyenv init -)"
 # Created by `pipx` on 2024-08-13 11:04:24
 export PATH="$PATH:/Users/pabloskewes/.local/bin"
 
-
-
-
-
-
+# Add Latex to the PATH
+export PATH="/usr/local/texlive/2024/bin/universal-darwin:$PATH"
