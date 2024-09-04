@@ -24,6 +24,14 @@
     "when": "editorTextFocus && !editorReadonly"
   },
   {
+    "key": "cmd+r",
+    "command": "editor.action.insertSnippet",
+    "args": {
+      "snippet": "\\textcolor{red}{${TM_SELECTED_TEXT:${1:\\<cursor-here>}}}"
+    },
+    "when": "editorTextFocus && !editorReadonly"
+  },
+  {
     "key": "cmd+[Minus]",
     "command": "editor.action.commentLine",
     "when": "editorTextFocus && !editorReadonly"
