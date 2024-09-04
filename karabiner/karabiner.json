@@ -406,6 +406,26 @@
                 "type": "basic"
               }
             ]
+          },
+          {
+            "description": "Remap cmd + non_us_backslash to option + hyphen for backslash usage",
+            "manipulators": [
+              {
+                "type": "basic",
+                "from": {
+                  "key_code": "non_us_backslash",
+                  "modifiers": {
+                    "mandatory": ["command"]
+                  }
+                },
+                "to": [
+                  {
+                    "key_code": "hyphen",
+                    "modifiers": ["option"]
+                  }
+                ]
+              }
+            ]
           }
         ]
       },
