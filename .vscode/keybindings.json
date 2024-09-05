@@ -1,27 +1,31 @@
 [
+  // LaTeX-specific keybindings
   {
-    "key": "ctrl+b",
+    "key": "cmd+b",
     "command": "editor.action.insertSnippet",
     "args": {
       "snippet": "\\textbf{${TM_SELECTED_TEXT:${1:\\<cursor-here>}}}"
     },
-    "when": "editorTextFocus && !editorReadonly"
+    "when": "editorTextFocus && !editorReadonly",
+    "language": "latex"
   },
   {
-    "key": "ctrl+i",
+    "key": "cmd+i",
     "command": "editor.action.insertSnippet",
     "args": {
       "snippet": "\\textit{${TM_SELECTED_TEXT:${1:\\<cursor-here>}}}"
     },
-    "when": "editorTextFocus && !editorReadonly"
+    "when": "editorTextFocus && !editorReadonly",
+    "language": "latex"
   },
   {
-    "key": "ctrl+u",
+    "key": "cmd+u",
     "command": "editor.action.insertSnippet",
     "args": {
       "snippet": "\\underline{${TM_SELECTED_TEXT:${1:\\<cursor-here>}}}"
     },
-    "when": "editorTextFocus && !editorReadonly"
+    "when": "editorTextFocus && !editorReadonly",
+    "language": "latex"
   },
   {
     "key": "cmd+r",
@@ -29,8 +33,49 @@
     "args": {
       "snippet": "\\textcolor{red}{${TM_SELECTED_TEXT:${1:\\<cursor-here>}}}"
     },
-    "when": "editorTextFocus && !editorReadonly"
+    "when": "editorTextFocus && !editorReadonly",
+    "language": "latex"
   },
+
+  // Typst-specific keybindings
+  {
+    "key": "cmd+b",
+    "command": "editor.action.insertSnippet",
+    "args": {
+      "snippet": "*${TM_SELECTED_TEXT:${1:\\<cursor-here>}}*"
+    },
+    "when": "editorTextFocus && !editorReadonly",
+    "language": "typst"
+  },
+  {
+    "key": "cmd+i",
+    "command": "editor.action.insertSnippet",
+    "args": {
+      "snippet": "_${TM_SELECTED_TEXT:${1:\\<cursor-here>}}_"
+    },
+    "when": "editorTextFocus && !editorReadonly",
+    "language": "typst"
+  },
+  {
+    "key": "cmd+u",
+    "command": "editor.action.insertSnippet",
+    "args": {
+      "snippet": "#text(underline: true)[${TM_SELECTED_TEXT:${1:\\<cursor-here>}}]"
+    },
+    "when": "editorTextFocus && !editorReadonly",
+    "language": "typst"
+  },
+  {
+    "key": "cmd+r",
+    "command": "editor.action.insertSnippet",
+    "args": {
+      "snippet": "#text(fill: red)[${TM_SELECTED_TEXT:${1:\\<cursor-here>}}]"
+    },
+    "when": "editorTextFocus && !editorReadonly",
+    "language": "typst"
+  },
+
+  // More keybindings...
   {
     "key": "cmd+[Minus]",
     "command": "editor.action.commentLine",
