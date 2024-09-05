@@ -63,5 +63,10 @@
     "git.enableSmartCommit": true,
     "git.confirmSync": false,
 
-    "editor.formatOnSave": true
+    "editor.formatOnSave": true,
+
+    "[typst]": {
+        "editor.formatOnSave": true
+    },
+    "tinymist.formatterMode": "typstyle"
 }
