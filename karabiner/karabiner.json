@@ -426,6 +426,25 @@
                 ]
               }
             ]
+          },
+          {
+            "description": "Open Bluetooth settings with Fn + 2",
+            "manipulators": [
+              {
+                "from": {
+                  "key_code": "2",
+                  "modifiers": {
+                    "mandatory": ["fn"]
+                  }
+                },
+                "to": [
+                  {
+                    "shell_command": "open 'x-apple.systempreferences:com.apple.preferences.Bluetooth'"
+                  }
+                ],
+                "type": "basic"
+              }
+            ]
           }
         ]
       },
