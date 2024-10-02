@@ -68,5 +68,12 @@
     "[typst]": {
         "editor.formatOnSave": true
     },
-    "tinymist.formatterMode": "typstyle"
+    "tinymist.formatterMode": "typstyle",
+
+    "pylint.args": [
+        "--disable=W1203",  // Use lazy % formatting in logging functions
+        "--disable=C0115",  // Missing class docstring
+        "--disable=C0116",  // Missing function or method docstring
+        "--disable=C0114"   // Missing module docstring
+    ]
 }
