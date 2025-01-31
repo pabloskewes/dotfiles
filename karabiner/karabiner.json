@@ -541,6 +541,35 @@
                 "type": "basic"
               }
             ]
+          },
+          {
+            "description": "Map Ctrl + Shift + W to Command + Q for Magic Keyboard",
+            "manipulators": [
+              {
+                "conditions": [
+                  {
+                    "identifiers": [
+                      {
+                        "product_id": 620,
+                        "vendor_id": 76
+                      }
+                    ],
+                    "type": "device_if"
+                  }
+                ],
+                "from": {
+                  "key_code": "w",
+                  "modifiers": { "mandatory": ["control", "shift"] }
+                },
+                "to": [
+                  {
+                    "key_code": "q",
+                    "modifiers": ["command"]
+                  }
+                ],
+                "type": "basic"
+              }
+            ]
           }
         ]
       },
