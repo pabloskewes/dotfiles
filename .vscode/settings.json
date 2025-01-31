@@ -1,79 +1,101 @@
 {
-    "workbench.colorTheme": "Darcula",
+  "workbench.colorTheme": "Darcula",
 
-    "[python]": {
-        "editor.formatOnType": true,
-        "editor.defaultFormatter": "ms-python.black-formatter",
-        "editor.formatOnSave": true
-    },
+  "[python]": {
+    "editor.formatOnType": true,
+    "editor.defaultFormatter": "ms-python.black-formatter",
+    "editor.formatOnSave": true
+  },
 
-    "explorer.confirmDragAndDrop": false,
+  "explorer.confirmDragAndDrop": false,
 
-    "editor.inlineSuggest.enabled": true,
-    "github.copilot.enable": {
-        "*": true,
-        "plaintext": true,
-        "markdown": true,
-        "scminput": false,
-        "yaml": true
-    },
-    "github.copilot.advanced": {},
-    "github.copilot.editor.enableAutoCompletions": true,
-    "github.copilot.preferredAccount": "pabloskewes",
+  "editor.inlineSuggest.enabled": true,
+  "github.copilot.enable": {
+    "*": true,
+    "plaintext": true,
+    "markdown": true,
+    "scminput": false,
+    "yaml": true
+  },
+  "github.copilot.advanced": {},
+  "github.copilot.editor.enableAutoCompletions": true,
+  "github.copilot.preferredAccount": "pabloskewes",
 
-    "excalidraw.theme": "dark",
+  "excalidraw.theme": "dark",
 
-    "[dockerfile]": {
-        "editor.defaultFormatter": "ms-azuretools.vscode-docker",
-        "editor.formatOnSave": true
-    },
+  "[dockerfile]": {
+    "editor.defaultFormatter": "ms-azuretools.vscode-docker",
+    "editor.formatOnSave": true
+  },
 
-    "terminal.integrated.enableMultiLinePasteWarning": "never",
+  "terminal.integrated.enableMultiLinePasteWarning": "never",
 
-    "files.associations": {
-        "*.excalidraw": "json",
-        "*.excalidrawlib": "json",
-        "*.rmd": "markdown"
-    },
+  "files.associations": {
+    "*.excalidraw": "json",
+    "*.excalidrawlib": "json",
+    "*.rmd": "markdown"
+  },
 
-    "cmake.configureOnOpen": true,
+  "cmake.configureOnOpen": true,
 
-    "jupyter.askForKernelRestart": false,
-    "liveshare.notebooks.allowGuestExecuteCells": true,
+  "jupyter.askForKernelRestart": false,
+  "liveshare.notebooks.allowGuestExecuteCells": true,
 
-    "workbench.editorAssociations": {
-        "{git,gitlens}:/**/*.{md,csv}": "default",
-        "{git,gitlens}:/**/*.{md,csv,svg}": "default",
-        "*.md": "default"
-    },
+  "workbench.editorAssociations": {
+    "*.copilotmd": "vscode.markdown.preview.editor",
+    "{git,gitlens}:/**/*.{md,csv}": "default",
+    "*.md": "default",
+    "{git,gitlens,git-graph}:/**/*.{md,csv,svg}": "default"
+  },
 
-    "editor.wordWrap": "on",
+  "editor.wordWrap": "on",
 
-    "[typescript]": {
-        "editor.defaultFormatter": "esbenp.prettier-vscode",
-        "editor.formatOnSave": true
-    },
+  "[typescript]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.formatOnSave": true
+  },
 
-    "[json]": {
-        "editor.defaultFormatter": "esbenp.prettier-vscode",
-        "editor.formatOnSave": true
-    },
+  "[json]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.formatOnSave": true
+  },
 
-    "markdown.extension.toc.updateOnSave": false,
-    "git.enableSmartCommit": true,
-    "git.confirmSync": false,
+  "markdown.extension.toc.updateOnSave": false,
+  "git.enableSmartCommit": true,
+  "git.confirmSync": false,
 
+  "editor.formatOnSave": true,
+
+  "[typst]": {
     "editor.formatOnSave": true,
+    "editor.wordSeparators": "`~!@#$%^&*()=+[{]}\\|;:'\",.<>/?"
+  },
+  "tinymist.formatterMode": "typstyle",
 
-    "[typst]": {
-        "editor.formatOnSave": true
-    },
-    "tinymist.formatterMode": "typstyle",
+  "pylint.args": [
+    "--disable=W1203", // Use lazy % formatting in logging functions
+    "--disable=C0115", // Missing class docstring
+    "--disable=C0116", // Missing function or method docstring
+    "--disable=C0114" // Missing module docstring
+  ],
+  "cmake.options.statusBarVisibility": "icon",
+  "cmake.pinnedCommands": [
+    "workbench.action.tasks.configureTaskRunner",
+    "workbench.action.tasks.runTask"
+  ],
 
-    "pylint.args": [
-        "--disable=W1203",  // Use lazy % formatting in logging functions
-        "--disable=C0115",  // Missing class docstring
-        "--disable=C0116",  // Missing function or method docstring
-        "--disable=C0114"   // Missing module docstring
-    ]
+  "[c]": {
+    "editor.defaultFormatter": "ms-vscode.cpptools"
+  },
+  "[cpp]": {
+    "editor.defaultFormatter": "ms-vscode.cpptools"
+  },
+  "cmake.showOptionsMovedNotification": false,
+  "makefile.configureOnOpen": true,
+  "[typst-code]": {
+    "editor.wordSeparators": "`~!@#$%^&*()=+[{]}\\|;:'\",.<>/?"
+  },
+  "[markdown]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  }
 }
