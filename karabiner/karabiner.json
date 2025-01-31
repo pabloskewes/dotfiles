@@ -512,6 +512,35 @@
                 "type": "basic"
               }
             ]
+          },
+          {
+            "description": "Map Ctrl + W to Command + W for Magic Keyboard",
+            "manipulators": [
+              {
+                "conditions": [
+                  {
+                    "identifiers": [
+                      {
+                        "product_id": 620,
+                        "vendor_id": 76
+                      }
+                    ],
+                    "type": "device_if"
+                  }
+                ],
+                "from": {
+                  "key_code": "w",
+                  "modifiers": { "mandatory": ["control"] }
+                },
+                "to": [
+                  {
+                    "key_code": "w",
+                    "modifiers": ["command"]
+                  }
+                ],
+                "type": "basic"
+              }
+            ]
           }
         ]
       },
