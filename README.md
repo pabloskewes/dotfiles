@@ -167,7 +167,7 @@ batisteo.vscode-django
 The Karabiner configuration file is stored in `~/.config/karabiner/karabiner.json`. Create a symlink to the configuration file in this repository:
 
 ```bash
-ln -sf ~/dotfiles/.config/karabiner/karabiner.json ~/.config/karabiner/karabiner.json
+ln -sf ~/dotfiles/karabiner/karabiner.json ~/.config/karabiner/karabiner.json
 ```
 
 ### Custom Keybindings

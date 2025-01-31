@@ -477,6 +477,41 @@
                 "type": "basic"
               }
             ]
+          },
+          {
+            "description": "Map Command + | on USB keyboard to Command + ` (Move Focus to Next Window)",
+            "manipulators": [
+              {
+                "conditions": [
+                  {
+                    "identifiers": [
+                      {
+                        "product_id": 3620,
+                        "vendor_id": 6700
+                      },
+                      {
+                        "product_id": 24600,
+                        "vendor_id": 6127
+                      }
+                    ],
+                    "type": "device_if"
+                  }
+                ],
+                "from": {
+                  "key_code": "grave_accent_and_tilde",
+                  "modifiers": {
+                    "mandatory": ["command"]
+                  }
+                },
+                "to": [
+                  {
+                    "key_code": "non_us_backslash",
+                    "modifiers": ["command"]
+                  }
+                ],
+                "type": "basic"
+              }
+            ]
           }
         ]
       },
