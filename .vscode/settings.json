@@ -31,6 +31,7 @@
   "terminal.integrated.enableMultiLinePasteWarning": "never",
 
   "files.associations": {
+    "**/.ssh/config": "plaintext",
     "*.excalidraw": "json",
     "*.excalidrawlib": "json",
     "*.rmd": "markdown"
@@ -97,5 +98,8 @@
   },
   "[markdown]": {
     "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[plaintext]": {
+    "editor.formatOnSave": false
   }
 }
