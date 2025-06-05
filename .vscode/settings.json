@@ -45,8 +45,7 @@
   "workbench.editorAssociations": {
     "*.copilotmd": "vscode.markdown.preview.editor",
     "{git,gitlens}:/**/*.{md,csv}": "default",
-    "*.md": "default",
-    "{git,gitlens,git-graph}:/**/*.{md,csv,svg}": "default"
+    "*.md": "default"
   },
 
   "editor.wordWrap": "on",
@@ -100,6 +99,8 @@
     "editor.defaultFormatter": "esbenp.prettier-vscode"
   },
   "[plaintext]": {
-    "editor.formatOnSave": false
+    "editor.formatOnSave": false,
+    "editor.formatOnType": false,
+    "editor.defaultFormatter": null
   }
 }
