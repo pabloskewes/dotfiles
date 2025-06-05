@@ -21,6 +21,10 @@
                       {
                         "product_id": 20480,
                         "vendor_id": 12815
+                      },
+                      {
+                        "product_id": 8197,
+                        "vendor_id": 16700
                       }
                     ],
                     "type": "device_if"
@@ -45,6 +49,10 @@
                       {
                         "product_id": 20480,
                         "vendor_id": 12815
+                      },
+                      {
+                        "product_id": 8197,
+                        "vendor_id": 16700
                       }
                     ],
                     "type": "device_if"
@@ -69,6 +77,10 @@
                       {
                         "product_id": 20480,
                         "vendor_id": 12815
+                      },
+                      {
+                        "product_id": 8197,
+                        "vendor_id": 16700
                       }
                     ],
                     "type": "device_if"
@@ -93,6 +105,10 @@
                       {
                         "product_id": 20480,
                         "vendor_id": 12815
+                      },
+                      {
+                        "product_id": 8197,
+                        "vendor_id": 16700
                       }
                     ],
                     "type": "device_if"
@@ -146,6 +162,10 @@
                       {
                         "product_id": 20480,
                         "vendor_id": 12815
+                      },
+                      {
+                        "product_id": 8197,
+                        "vendor_id": 16700
                       }
                     ],
                     "type": "device_if"
@@ -207,6 +227,10 @@
                       {
                         "product_id": 20480,
                         "vendor_id": 12815
+                      },
+                      {
+                        "product_id": 8197,
+                        "vendor_id": 16700
                       }
                     ],
                     "type": "device_if"
@@ -417,6 +441,10 @@
                       {
                         "product_id": 20480,
                         "vendor_id": 12815
+                      },
+                      {
+                        "product_id": 8197,
+                        "vendor_id": 16700
                       }
                     ],
                     "type": "device_if"
@@ -449,6 +477,10 @@
                       {
                         "product_id": 20480,
                         "vendor_id": 12815
+                      },
+                      {
+                        "product_id": 8197,
+                        "vendor_id": 16700
                       }
                     ],
                     "type": "device_if"
@@ -528,6 +560,10 @@
                       {
                         "product_id": 20480,
                         "vendor_id": 12815
+                      },
+                      {
+                        "product_id": 8197,
+                        "vendor_id": 16700
                       }
                     ],
                     "type": "device_if"
