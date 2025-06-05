@@ -79,19 +79,54 @@ git clone-scopeo some-repo
 
 ### Karabiner-Elements Configuration
 
-Custom keyboard mappings for macOS:
+Custom keyboard mappings for macOS, supporting both MacBook and external keyboards:
 
-- **Alt/Command Swap** for USB keyboards
-- **Close Application**:
-  - MacBook: `Fn + Shift + W` → `Command + Q`
-  - USB: `Ctrl + Shift + W` → `Command + Q`
-- **Close Window**:
-  - MacBook: `Fn + W` → `Command + W`
-  - USB: `Ctrl + W` → `Command + W`
-- **Open Terminal**: `Ctrl + RAlt + T` or `Ctrl + LAlt + T`
-- **Show Desktop**: `Command + D` → `Fn + F11`
-- **Cut Files in Finder**: `Command + X`
-- **Screenshot Selected Area**: `Fn + 1` → `Command + Control + Shift + 4`
+#### Keyboard-Specific Mappings
+
+- **USB Keyboard (Keychron, etc.)**:
+
+  - Swap Alt (Option) and Command keys
+  - `Ctrl + W` → `Command + W` (Close Window)
+  - `Ctrl + Shift + W` → `Command + Q` (Close Application)
+  - `Ctrl + Alt + T` → Open Terminal
+  - `Command + |` → `Command + `` (Move Focus to Next Window)
+
+- **MacBook Keyboard**:
+
+  - `Fn + W` → `Command + W` (Close Window)
+  - `Fn + Shift + W` → `Command + Q` (Close Application)
+  - `Fn + 1` → `Command + Control + Shift + 4` (Screenshot Selected Area)
+  - `Fn + 2` → Open Bluetooth Settings
+
+- **Magic Keyboard**:
+  - `Ctrl + W` → `Command + W` (Close Window)
+  - `Ctrl + Shift + W` → `Command + Q` (Close Application)
+
+#### Universal Shortcuts
+
+- **Terminal Access**:
+
+  - `Ctrl + Right Alt + T` or `Ctrl + Left Alt + T` → Open Terminal
+
+- **Window Management**:
+
+  - `Command + D` → `Fn + F11` (Show Desktop)
+
+- **Finder Operations**:
+
+  - `Command + X` → Cut Files (with paste)
+
+- **Special Characters**:
+  - `\` → `<` (on USB keyboard)
+  - `Shift + \` → `>` (on USB keyboard)
+  - `` ` `` → `<` (on MacBook keyboard)
+  - ` Shift + ``  ` ``→`>` (on MacBook keyboard)
+  - `Command + \` → `Option + -` (for backslash usage)
+
+#### Screenshot Tools
+
+- `Fn + 1` → `Command + Control + Shift + 4` (Screenshot Selected Area)
+- `Print Screen` → `Command + Control + Shift + 4` (Screenshot Selected Area)
 
 ## VS Code Extensions
 
