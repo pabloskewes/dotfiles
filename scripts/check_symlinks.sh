@@ -1,17 +1,5 @@
 #!/bin/bash
 
-# List of symlinks to check
-symlinks=(
-    "$HOME/.bashrc"
-    "$HOME/.bash_aliases"
-    "$HOME/.config/Code/User/settings.json"
-    "$HOME/.config/Code/User/keybindings.json"
-    "$HOME/Library/Application Support/Code/User/settings.json"
-    "$HOME/Library/Application Support/Code/User/keybindings.json"
-    "$HOME/.gitconfig"
-    "$HOME/.config/karabiner/karabiner.json"
-)
-
 # Function to check symlink
 check_symlink() {
     if [ -L "$1" ]; then
@@ -24,6 +12,31 @@ check_symlink() {
         echo "Not a symlink: $1"
     fi
 }
+
+# List of symlinks to check
+symlinks=(
+    "$HOME/.bashrc"
+    "$HOME/.bash_aliases"
+    "$HOME/.gitconfig"
+    "$HOME/.config/karabiner/karabiner.json"
+)
+
+# Add VS Code / Cursor paths based on OS
+if [[ "$OSTYPE" == "darwin"* ]]; then
+    # macOS paths
+    symlinks+=(
+        "$HOME/Library/Application Support/Code/User/settings.json"
+        "$HOME/Library/Application Support/Code/User/keybindings.json"
+        "$HOME/Library/Application Support/Cursor/User/settings.json"
+        "$HOME/Library/Application Support/Cursor/User/keybindings.json"
+    )
+else
+    # Linux paths
+    symlinks+=(
+        "$HOME/.config/Code/User/settings.json"
+        "$HOME/.config/Code/User/keybindings.json"
+    )
+fi
 
 # Loop through each symlink and check it
 for symlink in "${symlinks[@]}"; do

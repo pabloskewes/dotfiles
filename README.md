@@ -1,77 +1,54 @@
 # Dotfiles
 
-This repository contains my personal dotfiles and configuration files for setting up my development environment. Follow the instructions below to clone the repository and set up the environment on a new machine.
+This repository contains my personal dotfiles and configuration files for setting up my development environment. It includes configurations for VS Code/Cursor, Git, Bash, and Karabiner-Elements.
 
-## Table of Contents
+## Quick Start
 
-- [Cloning the Repository](#cloning-the-repository)
-- [Creating Symlinks](#creating-symlinks)
-  - [Bash Configuration](#bash-configuration)
-  - [VS Code Configuration](#vs-code-configuration)
-- [Git Configuration](#git-configuration)
-  - [SSH Configuration](#ssh-configuration)
-- [VS Code Configuration](#vs-code-configuration)
-  - [Settings](#settings)
-  - [Keybindings](#keybindings)
-  - [Custom Settings](#custom-settings)
-- [VS Code Extensions](#vs-code-extensions)
-- [Karabiner Configuration](#karabiner-configuration)
-  - [Custom Keybindings](#custom-keybindings)
-
-## Cloning the Repository
-
-Start by cloning the dotfiles repository to your home directory:
+1. Clone this repository:
 
 ```bash
 git clone https://github.com/yourusername/dotfiles.git ~/dotfiles
 ```
 
-## Creating Symlinks
-
-To ensure your system uses the configurations stored in this repository, create symlinks from your home directory to the dotfiles in this repository.
-
-### Bash Configuration
+2. Run the setup script:
 
 ```bash
-ln -sf ~/dotfiles/.bashrc ~/.bashrc
-ln -sf ~/dotfiles/.bash_aliases ~/.bash_aliases
+cd ~/dotfiles
+chmod +x scripts/setup_symlinks.sh
+./scripts/setup_symlinks.sh
 ```
 
-### VS Code Configuration
+This will automatically create all necessary symlinks for your configuration files.
 
-For Linux, the VS Code configuration files are stored in the `~/.config/Code/User` directory. Create symlinks to the settings and keybindings files in this repository:
+## Configuration Files
 
-```bash
-ln -sf ~/dotfiles/.vscode/settings.json ~/.config/Code/User/settings.json
-ln -sf ~/dotfiles/.vscode/keybindings.json ~/.config/Code/User/keybindings.json
-```
+### VS Code / Cursor Configuration
 
-For macOS, the VS Code configuration files are stored in the `~/Library/Application Support/Code/User` directory. Create symlinks to the settings and keybindings files in this repository:
+The setup script handles both VS Code and Cursor configurations automatically:
 
-```bash
-ln -sf ~/dotfiles/.vscode/settings.json ~/Library/Application\ Support/Code/User/settings.json
-ln -sf ~/dotfiles/.vscode/keybindings.json ~/Library/Application\ Support/Code/User/keybindings.json
-```
+- On macOS:
+  - VS Code: `~/Library/Application Support/Code/User/`
+  - Cursor: `~/Library/Application Support/Cursor/User/`
+- On Linux:
+  - VS Code: `~/.config/Code/User/`
 
-## Git Configuration
+Both editors will use the same configuration files from your dotfiles repository.
 
-To manage your Git configuration across multiple systems, store the `.gitconfig` file in your dotfiles repository and create a symlink:
+### Git Configuration
 
-```bash
-ln -sf ~/dotfiles/.gitconfig ~/.gitconfig
-```
+The `.gitconfig` file includes:
 
-### SSH Configuration
+- Multiple GitHub account support via SSH
+- Custom aliases for cloning repositories
+- Common Git configurations
 
-To manage multiple GitHub accounts (e.g., personal and work) using SSH, you can set up SSH configuration aliases. This allows you to easily switch between accounts based on the folder or project you're working on.
+#### SSH Configuration
 
-#### SSH Config Setup
-
-Add the following configuration to your `~/.ssh/config` file:
+The repository includes SSH configuration for managing multiple GitHub accounts:
 
 ```plaintext
 # Personal GitHub account
-Host github         
+Host github
   HostName github.com
   User git
   IdentityFile ~/.ssh/id_rsa_personal
@@ -83,114 +60,65 @@ Host github-scopeo
   IdentityFile ~/.ssh/id_rsa_scopeo
 ```
 
-#### Using Git Aliases
+#### Git Aliases
 
-To streamline your workflow, this repository includes Git aliases that allow you to clone repositories using the appropriate SSH key without manually specifying the full URL:
+Useful Git aliases for quick repository cloning:
 
-```plaintext
-[alias]
-    clone-personal = "!f() { git clone git@github:$1.git; }; f"
-    clone-scopeo = "!f() { git clone git@github-scopeo:$1.git; }; f"
+```bash
+# Clone personal repository
+git clone-personal some-repo
+
+# Clone work repository
+git clone-scopeo some-repo
 ```
 
-These aliases allow you to quickly clone repositories based on your SSH configuration:
+### Bash Configuration
 
-- **For personal repositories**:
-  ```bash
-  git clone-personal some-repo
-  ```
+- `.bashrc`: Main Bash configuration file
+- `.bash_aliases`: Custom Bash aliases
 
-- **For work repositories**:
-  ```bash
-  git clone-scopeo some-repo
-  ```
+### Karabiner-Elements Configuration
 
+Custom keyboard mappings for macOS:
 
-#### Summary
-
-Ensure that the `Host` names in your SSH config (`github` and `github-scopeo`) match the aliases used in your Git remote URLs. If you've already cloned a repository, update the remote URL to use the correct alias to ensure the right SSH key is used.
-
-## VS Code Configuration
-
-### Settings
-
-The VS Code settings and keybindings are managed in this repository. They are stored in:
-
-- `~/.vscode/settings.json`
-- `~/.vscode/keybindings.json`
-
-### Keybindings
-
-Keybindings for VS Code include custom shortcuts, especially useful for LaTeX editing:
-
-- `Ctrl+B` for bold text in LaTeX
-- `Ctrl+I` for italic text in LaTeX
-- `Ctrl+U` for underlined text in LaTeX
-
-### Custom Settings
-
-The `settings.json` includes configurations for:
-
-- Python formatting with Black
-- Enabling GitHub Copilot
-- Setting up terminal behavior
-- File associations for custom file types
+- **Alt/Command Swap** for USB keyboards
+- **Close Application**:
+  - MacBook: `Fn + Shift + W` → `Command + Q`
+  - USB: `Ctrl + Shift + W` → `Command + Q`
+- **Close Window**:
+  - MacBook: `Fn + W` → `Command + W`
+  - USB: `Ctrl + W` → `Command + W`
+- **Open Terminal**: `Ctrl + RAlt + T` or `Ctrl + LAlt + T`
+- **Show Desktop**: `Command + D` → `Fn + F11`
+- **Cut Files in Finder**: `Command + X`
+- **Screenshot Selected Area**: `Fn + 1` → `Command + Control + Shift + 4`
 
 ## VS Code Extensions
 
-To install the VS Code extensions listed in the repository, use the provided `extensions.txt` file.
-
-### Exported Extensions
-
-This repository includes a list of VS Code extensions that I commonly use, stored in `.vscode/extensions.txt`. You can install all these extensions using the following command:
+Install all recommended extensions:
 
 ```bash
 cat ~/dotfiles/.vscode/extensions.txt | grep -v '^#' | xargs -n 1 code --install-extension
 ```
 
-### Commented Extensions List
+## Maintenance
 
-The `extensions.txt` file includes comments explaining the purpose of each extension. These comments are ignored when running the installation command.
+### Checking Symlinks
 
-```plaintext
-# SQL Formatter
-adpyke.vscode-sql-formatter
-
-# Django support
-batisteo.vscode-django
-
-# (etc.)
-```
-
-## Karabiner Configuration
-
-The Karabiner configuration file is stored in `~/.config/karabiner/karabiner.json`. Create a symlink to the configuration file in this repository:
+To verify that all symlinks are correctly set up:
 
 ```bash
-ln -sf ~/dotfiles/karabiner/karabiner.json ~/.config/karabiner/karabiner.json
+./scripts/check_symlinks.sh
 ```
 
-### Custom Keybindings
+### Updating Symlinks
 
-- **Invert Alt (Option) and Command keys**
-  - **USB Keyboard:** Swaps `Alt (Option)` and `Command` keys.
+If you need to update your symlinks:
 
-- **Close Application**
-  - **MacBook keyboard:** `Fn + Shift + W` ⟶ `Command + Q`
-  - **USB Keyboard:** `Ctrl + Shift + W` ⟶ `Command + Q`
+```bash
+./scripts/setup_symlinks.sh
+```
 
-- **Close Window**
-  - **MacBook keyboard:** `Fn + W` ⟶ `Command + W`
-  - **USB Keyboard:** `Ctrl + W` ⟶ `Command + W`
+## License
 
-- **Open Terminal**
-  - `Ctrl + RAlt + T` or `Ctrl + LAlt + T`
-
-- **Show Desktop**
-  - `Command + D` ⟶ `Fn + F11`
-
-- **Cut Files in Finder**
-  - `Command + X` ⟶ Cut files
-
-- **Screenshot Selected Area to Clipboard**
-  - `Fn + 1` ⟶ `Command + Control + Shift + 4`
+This project is licensed under the MIT License - see the LICENSE file for details.
