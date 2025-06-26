@@ -41,6 +41,9 @@ create_symlink "$DOTFILES_DIR/.gitconfig" "$HOME/.gitconfig"
 # Karabiner configuration
 create_symlink "$DOTFILES_DIR/karabiner/karabiner.json" "$HOME/.config/karabiner/karabiner.json"
 
+# Hammerspoon configuration
+create_symlink "$DOTFILES_DIR/hammerspoon/init.lua" "$HOME/.hammerspoon/init.lua"
+
 # VS Code / Cursor configuration
 if [[ "$OSTYPE" == "darwin"* ]]; then
     # macOS paths

@@ -127,5 +127,8 @@
     "**/id_dsa",
     "**/.ssh/id_*"
   ],
-  "cursor.cpp.enablePartialAccepts": true
+  "cursor.cpp.enablePartialAccepts": true,
+  "[jsonc]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  }
 }
