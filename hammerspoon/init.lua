@@ -2,8 +2,8 @@
 -- Window management and automation for macOS
 
 -- === Configurable Hotkey for Always-on-Top ===
-local modifiers = {"ctrl", "alt"}        -- Change as needed
-local key = "\\"                         -- Backslash key (can use any string)
+local modifiers = {"ctrl", "alt"}      
+local key = "P"                         
 
 -- === Always-on-Top Toggle Functionality ===
 local borders = {}  -- Store borders per window
