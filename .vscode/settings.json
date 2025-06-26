@@ -103,4 +103,5 @@
     "editor.formatOnType": false,
     "editor.defaultFormatter": null
   }
+  "cursor.cpp.enablePartialAccepts": true
 }
