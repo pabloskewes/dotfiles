@@ -130,5 +130,8 @@
   "cursor.cpp.enablePartialAccepts": true,
   "[jsonc]": {
     "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[toml]": {
+    "editor.formatOnSave": false
   }
 }
