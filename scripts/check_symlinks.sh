@@ -19,6 +19,7 @@ symlinks=(
     "$HOME/.bash_aliases"
     "$HOME/.gitconfig"
     "$HOME/.config/karabiner/karabiner.json"
+    "$HOME/.hammerspoon/init.lua"
 )
 
 # Add VS Code / Cursor paths based on OS

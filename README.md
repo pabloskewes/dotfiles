@@ -22,6 +22,10 @@ This will automatically create all necessary symlinks for your configuration fil
 
 ## Configuration Files
 
+### Hammerspoon Configuration
+
+Window management and automation for macOS. Includes always-on-top functionality with `Ctrl + Alt + \` hotkey and visual border indicators.
+
 ### VS Code / Cursor Configuration
 
 The setup script handles both VS Code and Cursor configurations automatically:
