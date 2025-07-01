@@ -1,15 +1,92 @@
 {
+  // ===================================================================
+  // CORE EDITOR & WORKBENCH SETTINGS
+  // ===================================================================
   "workbench.colorTheme": "Darcula",
+  "editor.inlineSuggest.enabled": true,
+  "editor.wordWrap": "on",
+  "editor.formatOnSave": true,
+  "explorer.confirmDragAndDrop": false,
+  "terminal.integrated.enableMultiLinePasteWarning": "never",
 
+  // ===================================================================
+  // FILE ASSOCIATIONS & EDITOR ASSOCIATIONS
+  // ===================================================================
+  "files.associations": {
+    "**/.ssh/config": "plaintext",
+    "*.excalidraw": "json",
+    "*.excalidrawlib": "json",
+    "*.rmd": "markdown"
+  },
+  "workbench.editorAssociations": {
+    "*.copilotmd": "vscode.markdown.preview.editor",
+    "{git,gitlens}:/**/*.{md,csv}": "default",
+    "*.md": "default"
+  },
+
+  // ===================================================================
+  // LANGUAGE-SPECIFIC FORMATTERS
+  // ===================================================================
   "[python]": {
     "editor.formatOnType": true,
     "editor.defaultFormatter": "ms-python.black-formatter",
     "editor.formatOnSave": true
   },
+  "[typescript]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.formatOnSave": true
+  },
+  "[json]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.formatOnSave": true
+  },
+  "[jsonc]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[javascript]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[markdown]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[c]": {
+    "editor.defaultFormatter": "ms-vscode.cpptools"
+  },
+  "[cpp]": {
+    "editor.defaultFormatter": "ms-vscode.cpptools"
+  },
+  "[typst]": {
+    "editor.formatOnSave": true,
+    "editor.wordSeparators": "`~!@#$%^&*()=+[{]}\\|;:'\",.<>/?"
+  },
+  "[typst-code]": {
+    "editor.wordSeparators": "`~!@#$%^&*()=+[{]}\\|;:'\",.<>/?"
+  },
+  "[dotenv]": {
+    "editor.defaultFormatter": "foxundermoon.shell-format"
+  },
+  "[plaintext]": {
+    "editor.formatOnSave": false,
+    "editor.formatOnType": false,
+    "editor.defaultFormatter": null
+  },
+  "[dockerfile]": {
+    "editor.defaultFormatter": null,
+    "editor.formatOnSave": false
+  },
+  "[toml]": {
+    "editor.formatOnSave": false
+  },
 
-  "explorer.confirmDragAndDrop": false,
+  // ===================================================================
+  // GIT SETTINGS
+  // ===================================================================
+  "git.enableSmartCommit": true,
+  "git.confirmSync": false,
 
-  "editor.inlineSuggest.enabled": true,
+  // ===================================================================
+  // GITHUB COPILOT SETTINGS
+  // ===================================================================
   "github.copilot.enable": {
     "*": true,
     "plaintext": true,
@@ -21,95 +98,11 @@
   "github.copilot.editor.enableAutoCompletions": true,
   "github.copilot.preferredAccount": "pabloskewes",
 
-  "excalidraw.theme": "dark",
-
-  "terminal.integrated.enableMultiLinePasteWarning": "never",
-
-  "files.associations": {
-    "**/.ssh/config": "plaintext",
-    "*.excalidraw": "json",
-    "*.excalidrawlib": "json",
-    "*.rmd": "markdown"
-  },
-
-  "cmake.configureOnOpen": true,
-
-  "jupyter.askForKernelRestart": false,
-  "liveshare.notebooks.allowGuestExecuteCells": true,
-
-  "workbench.editorAssociations": {
-    "*.copilotmd": "vscode.markdown.preview.editor",
-    "{git,gitlens}:/**/*.{md,csv}": "default",
-    "*.md": "default"
-  },
-
-  "editor.wordWrap": "on",
-
-  "[typescript]": {
-    "editor.defaultFormatter": "esbenp.prettier-vscode",
-    "editor.formatOnSave": true
-  },
-
-  "[json]": {
-    "editor.defaultFormatter": "esbenp.prettier-vscode",
-    "editor.formatOnSave": true
-  },
-
-  "markdown.extension.toc.updateOnSave": false,
-  "git.enableSmartCommit": true,
-  "git.confirmSync": false,
-
-  "editor.formatOnSave": true,
-
-  "[typst]": {
-    "editor.formatOnSave": true,
-    "editor.wordSeparators": "`~!@#$%^&*()=+[{]}\\|;:'\",.<>/?"
-  },
-  "tinymist.formatterMode": "typstyle",
-
-  "pylint.args": [
-    "--disable=W1203", // Use lazy % formatting in logging functions
-    "--disable=C0115", // Missing class docstring
-    "--disable=C0116", // Missing function or method docstring
-    "--disable=C0114" // Missing module docstring
-  ],
-  "cmake.options.statusBarVisibility": "icon",
-  "cmake.pinnedCommands": [
-    "workbench.action.tasks.configureTaskRunner",
-    "workbench.action.tasks.runTask"
-  ],
-
-  "[c]": {
-    "editor.defaultFormatter": "ms-vscode.cpptools"
-  },
-  "[cpp]": {
-    "editor.defaultFormatter": "ms-vscode.cpptools"
-  },
-  "cmake.showOptionsMovedNotification": false,
-  "makefile.configureOnOpen": true,
-  "[typst-code]": {
-    "editor.wordSeparators": "`~!@#$%^&*()=+[{]}\\|;:'\",.<>/?"
-  },
-  "[markdown]": {
-    "editor.defaultFormatter": "esbenp.prettier-vscode"
-  },
-  "[plaintext]": {
-    "editor.formatOnSave": false,
-    "editor.formatOnType": false,
-    "editor.defaultFormatter": null
-  },
-  "[dotenv]": {
-    "editor.defaultFormatter": "foxundermoon.shell-format"
-  },
-  "[javascript]": {
-    "editor.defaultFormatter": "esbenp.prettier-vscode"
-  },
+  // ===================================================================
+  // CURSOR SETTINGS
+  // ===================================================================
   "cursor.composer.shouldChimeAfterChatFinishes": true,
-  "[dockerfile]": {
-    "editor.defaultFormatter": null,
-    "editor.formatOnSave": false
-  },
-  "prettier.disableLanguages": ["dockerfile"],
+  "cursor.cpp.enablePartialAccepts": true,
   "cursor.general.globalCursorIgnoreList": [
     "",
     "",
@@ -127,11 +120,32 @@
     "**/id_dsa",
     "**/.ssh/id_*"
   ],
-  "cursor.cpp.enablePartialAccepts": true,
-  "[jsonc]": {
-    "editor.defaultFormatter": "esbenp.prettier-vscode"
-  },
-  "[toml]": {
-    "editor.formatOnSave": false
-  }
+
+  // ===================================================================
+  // OTHER EXTENSION SETTINGS
+  // ===================================================================
+  "excalidraw.theme": "dark",
+  "markdown.extension.toc.updateOnSave": false,
+  "tinymist.formatterMode": "typstyle",
+  "prettier.disableLanguages": ["dockerfile"],
+  "pylint.args": [
+    "--disable=W1203", // Use lazy % formatting in logging functions
+    "--disable=C0115", // Missing class docstring
+    "--disable=C0116", // Missing function or method docstring
+    "--disable=C0114" // Missing module docstring
+  ],
+
+  // ===================================================================
+  // TOOL-SPECIFIC SETTINGS
+  // ===================================================================
+  "cmake.configureOnOpen": true,
+  "cmake.options.statusBarVisibility": "icon",
+  "cmake.pinnedCommands": [
+    "workbench.action.tasks.configureTaskRunner",
+    "workbench.action.tasks.runTask"
+  ],
+  "cmake.showOptionsMovedNotification": false,
+  "makefile.configureOnOpen": true,
+  "jupyter.askForKernelRestart": false,
+  "liveshare.notebooks.allowGuestExecuteCells": true
 }
