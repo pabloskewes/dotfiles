@@ -642,6 +642,76 @@
                 "type": "basic"
               }
             ]
+          },
+          {
+            "description": "Remap Cmd+E to Cmd+Shift+C (code), Cmd+P to switch channel, and Cmd+K to create link, in Slack.",
+            "manipulators": [
+              {
+                "conditions": [
+                  {
+                    "bundle_identifiers": ["^com\\.tinyspeck\\.slackmacgap$"],
+                    "type": "frontmost_application_if"
+                  }
+                ],
+                "from": {
+                  "key_code": "e",
+                  "modifiers": {
+                    "mandatory": ["command"]
+                  }
+                },
+                "to": [
+                  {
+                    "key_code": "c",
+                    "modifiers": ["command", "shift"]
+                  }
+                ],
+                "type": "basic"
+              },
+              {
+                "conditions": [
+                  {
+                    "bundle_identifiers": ["^com\\.tinyspeck\\.slackmacgap$"],
+                    "type": "frontmost_application_if"
+                  }
+                ],
+                "from": {
+                  "key_code": "p",
+                  "modifiers": {
+                    "mandatory": ["command"]
+                  }
+                },
+                "to": [
+                  {
+                    "key_code": "k",
+                    "lazy": true,
+                    "modifiers": ["command"]
+                  }
+                ],
+                "type": "basic"
+              },
+              {
+                "conditions": [
+                  {
+                    "bundle_identifiers": ["^com\\.tinyspeck\\.slackmacgap$"],
+                    "type": "frontmost_application_if"
+                  }
+                ],
+                "from": {
+                  "key_code": "k",
+                  "modifiers": {
+                    "mandatory": ["command"]
+                  }
+                },
+                "to": [
+                  {
+                    "key_code": "u",
+                    "lazy": true,
+                    "modifiers": ["command", "shift"]
+                  }
+                ],
+                "type": "basic"
+              }
+            ]
           }
         ]
       },
