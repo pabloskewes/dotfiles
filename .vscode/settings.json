@@ -30,7 +30,8 @@
   "[python]": {
     "editor.formatOnType": true,
     "editor.defaultFormatter": "ms-python.black-formatter",
-    "editor.formatOnSave": true
+    "editor.formatOnSave": true,
+    "python.languageServer": "Pylance"
   },
   "[typescript]": {
     "editor.defaultFormatter": "esbenp.prettier-vscode",
@@ -120,6 +121,7 @@
     "**/id_dsa",
     "**/.ssh/id_*"
   ],
+  "cursorpyright.analysis.typeCheckingMode": "basic",
 
   // ===================================================================
   // OTHER EXTENSION SETTINGS
@@ -147,5 +149,17 @@
   "cmake.showOptionsMovedNotification": false,
   "makefile.configureOnOpen": true,
   "jupyter.askForKernelRestart": false,
-  "liveshare.notebooks.allowGuestExecuteCells": true
+  "liveshare.notebooks.allowGuestExecuteCells": true,
+  "github.copilot.nextEditSuggestions.enabled": true,
+  "cursor.composer.queueMessageDefaultBehavior": "stop-and-send",
+  "cursor.composer.usageSummaryDisplay": "always",
+  "[dockercompose]": {
+    "editor.insertSpaces": true,
+    "editor.tabSize": 2,
+    "editor.autoIndent": "advanced",
+    "editor.defaultFormatter": "redhat.vscode-yaml"
+  },
+  "[github-actions-workflow]": {
+    "editor.defaultFormatter": "redhat.vscode-yaml"
+  }
 }

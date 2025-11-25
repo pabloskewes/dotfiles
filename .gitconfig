@@ -10,5 +10,19 @@
 [alias]
     clone-personal = "!f() { git clone git@github:$1; }; f"
     clone-scopeo = "!f() { git clone git@github-scopeo:$1; }; f"
+    rename-branch = "!f() { \
+        if [ -z \"$1\" ]; then echo \"Usage: git rename-branch <new-name>\"; return 1; fi; \
+        current_branch=\"$(git symbolic-ref --short HEAD)\"; \
+        new_branch=\"$1\"; \
+        git branch -m \"$new_branch\" || return 1; \
+        upstream=\"$(git rev-parse --abbrev-ref --symbolic-full-name @{u} 2>/dev/null || true)\"; \
+        if [ -n \"$upstream\" ]; then \
+            remote=\"${upstream%%/*}\"; \
+            git push \"$remote\" --force-with-lease -u \"$new_branch\"; \
+            git push \"$remote\" :\"$current_branch\"; \
+        else \
+            echo \"No upstream tracking branch; skipped remote updates.\"; \
+        fi; \
+    }; f"
 [http]
 	postBuffer = 524288000

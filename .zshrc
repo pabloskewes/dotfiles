@@ -87,6 +87,8 @@ source $ZSH/oh-my-zsh.sh
 # else
 #   export EDITOR='mvim'
 # fi
+export EDITOR='cursor'
+export VISUAL='cursor'
 
 # Compilation flags
 # export ARCHFLAGS="-arch $(uname -m)"
@@ -116,3 +118,8 @@ export PATH="/opt/homebrew/opt/openjdk/bin:$PATH"
 # Docker
 export COMPOSE_BAKE=true
 
+# Aliases
+alias force-pull='git reset --hard origin/$(git rev-parse --abbrev-ref HEAD) && git pull'
+
+# Added by Antigravity
+export PATH="/Users/pabloskewes/.antigravity/antigravity/bin:$PATH"
