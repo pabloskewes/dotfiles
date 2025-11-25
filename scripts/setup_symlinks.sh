@@ -43,6 +43,10 @@ create_symlink "$DOTFILES_DIR/karabiner/karabiner.json" "$HOME/.config/karabiner
 
 # Hammerspoon configuration
 create_symlink "$DOTFILES_DIR/hammerspoon/init.lua" "$HOME/.hammerspoon/init.lua"
+create_symlink "$DOTFILES_DIR/hammerspoon/workspace-manager.lua" "$HOME/.hammerspoon/workspace-manager.lua"
+
+# Make lockin script executable
+chmod +x "$DOTFILES_DIR/hammerspoon/lockin"
 
 # VS Code / Cursor configuration
 if [[ "$OSTYPE" == "darwin"* ]]; then

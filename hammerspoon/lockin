@@ -1,0 +1,65 @@
+#!/bin/bash
+# CLI script to manage workspaces via Hammerspoon
+
+HS="/Applications/Hammerspoon.app/Contents/Frameworks/hs/hs"
+
+if [ ! -f "$HS" ]; then
+    echo "❌ Hammerspoon is not installed or not found in expected location"
+    echo "   Install with: brew install --cask hammerspoon"
+    exit 1
+fi
+
+function show_usage() {
+    cat << EOF
+Usage: lockin <command> [options]
+
+Commands:
+  lockin <profile>           Launch a profile
+  lockin <profile> --kill    Close a profile
+  lockin --list              List available profiles
+  lockin --status            Show active profiles
+  lockin --help              Show this help
+
+Examples:
+  lockin scopeo               # Launch scopeo workspace
+  lockin scopeo --kill        # Close scopeo workspace
+  lockin tesis                # Launch tesis workspace
+  lockin --list              # See all profiles
+
+EOF
+}
+
+# No arguments
+if [ $# -eq 0 ]; then
+    show_usage
+    exit 0
+fi
+
+# Global commands
+case "$1" in
+    --help|-h)
+        show_usage
+        exit 0
+        ;;
+    --list|-l)
+        $HS -c "workspaceManager.list()"
+        exit 0
+        ;;
+    --status|-s)
+        $HS -c "workspaceManager.status()"
+        exit 0
+        ;;
+esac
+
+# Profile commands
+PROFILE="$1"
+ACTION="${2:-launch}"
+
+case "$ACTION" in
+    --kill|-k)
+        $HS -c "workspaceManager.kill('$PROFILE')"
+        ;;
+    *)
+        $HS -c "workspaceManager.launch('$PROFILE')"
+        ;;
+esac

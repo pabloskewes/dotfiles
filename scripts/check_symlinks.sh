@@ -20,6 +20,7 @@ symlinks=(
     "$HOME/.gitconfig"
     "$HOME/.config/karabiner/karabiner.json"
     "$HOME/.hammerspoon/init.lua"
+    "$HOME/.hammerspoon/workspace-manager.lua"
 )
 
 # Add VS Code / Cursor paths based on OS
