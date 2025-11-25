@@ -12,11 +12,11 @@ M.profiles = {
     
     iterm = {
       tabs = {
+        { name = "Docker", command = "cd ~/Scopeo/draftnrun/services && docker compose up" },
         { name = "Frontend", command = "cd ~/Scopeo/back-office && npm run dev" },
         { name = "Backend", command = "cd ~/Scopeo/draftnrun && uv run python -m ada_backend.main" },
-        { name = "Docker", command = "cd ~/Scopeo/draftnrun && docker compose up" },
-        { name = "General", command = "cd ~/Scopeo/draftnrun" },
         { name = "Infra", command = "cd ~/Scopeo/ada-infra" },
+        { name = "General", command = "cd ~/Scopeo/draftnrun" },
       },
       -- Auto-detect monitor: 1 = primary, 2 = secondary
       monitor = 1,
