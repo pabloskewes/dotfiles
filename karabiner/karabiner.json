@@ -504,20 +504,43 @@
             ]
           },
           {
-            "description": "Remap cmd + non_us_backslash to option + hyphen for backslash usage",
+            "description": "Map Command + non_us_backslash to Option + grave_accent_and_tilde for switching windows (USB Keyboard only)",
             "manipulators": [
               {
+                "conditions": [
+                  {
+                    "identifiers": [
+                      {
+                        "product_id": 3620,
+                        "vendor_id": 6700
+                      },
+                      {
+                        "product_id": 24600,
+                        "vendor_id": 6127
+                      },
+                      {
+                        "product_id": 20480,
+                        "vendor_id": 12815
+                      },
+                      {
+                        "product_id": 8197,
+                        "vendor_id": 16700
+                      }
+                    ],
+                    "type": "device_if"
+                  }
+                ],
                 "type": "basic",
                 "from": {
                   "key_code": "non_us_backslash",
                   "modifiers": {
-                    "mandatory": ["command"]
+                    "mandatory": ["left_option"]
                   }
                 },
                 "to": [
                   {
-                    "key_code": "hyphen",
-                    "modifiers": ["option"]
+                    "key_code": "grave_accent_and_tilde",
+                    "modifiers": ["left_option"]
                   }
                 ]
               }
