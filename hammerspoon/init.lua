@@ -1,7 +1,9 @@
--- Toggle "Always on Top" using yabai: Float + Topmost
-hs.hotkey.bind({"ctrl", "alt"}, "P", function()
-  hs.task.new("/bin/zsh", nil, function() return true end, {
-      "-c", "yabai -m window --toggle float; yabai -m window --toggle topmost"
-  }):start()
-  hs.alert.show("Toggled float + topmost")
-end)
+-- Enable IPC for CLI access
+require("hs.ipc")
+
+-- Load workspace manager
+workspaceManager = require("workspace-manager")
+
+-- Load notification
+hs.alert.show("Workspace Manager loaded! 🚀")
+workspaceManager.list()

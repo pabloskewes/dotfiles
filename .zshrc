@@ -120,6 +120,7 @@ export COMPOSE_BAKE=true
 
 # Aliases
 alias force-pull='git reset --hard origin/$(git rev-parse --abbrev-ref HEAD) && git pull'
+alias lockin="$HOME/dotfiles/hammerspoon/lockin"
 
 # Added by Antigravity
 export PATH="/Users/pabloskewes/.antigravity/antigravity/bin:$PATH"
