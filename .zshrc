@@ -124,3 +124,43 @@ alias lockin="$HOME/dotfiles/hammerspoon/lockin"
 
 # Added by Antigravity
 export PATH="/Users/pabloskewes/.antigravity/antigravity/bin:$PATH"
+
+# Utility function to inspect a PR
+pr-inspect() {
+    # 1. Validate that at least the PR number is passed
+    if [ -z "$1" ]; then
+        echo "❌ Error: Missing PR number" >&2
+        echo "Usage: pr-inspect <number> [repo]" >&2
+        return 1
+    fi
+
+    # 2. Configure variables
+    local PR_NUM="$1"
+    local REPO="${2:-Scopeo/draftnrun}"
+
+    echo "🔍 Searching PR #$PR_NUM in the repo: $REPO..."
+    echo "---------------------------------------------------"
+
+    # Deshabilitamos pager y modo TTY para que funcione igual con o sin pipe
+    GH_PAGER= GH_FORCE_TTY=0 NO_COLOR=1 TERM=dumb gh pr view "$PR_NUM" --repo "$REPO" --comments
+
+    echo
+    echo "============================================="
+    echo "🧵 INLINE REVIEW COMMENTS OF PR #$PR_NUM"
+    echo "============================================="
+    echo
+
+    GH_PAGER= GH_FORCE_TTY=0 gh api \
+    -H "Accept: application/vnd.github+json" \
+    "/repos/$REPO/pulls/$PR_NUM/comments" \
+    --paginate \
+    --jq '.[] | "\(.user.login)  \(.created_at)  (\(.path):\(.line // .original_line // 0))\n\(.body)\n---"'
+
+    echo
+    echo "============================================="
+    echo "📄 CODE (DIFF) OF PR #$PR_NUM"
+    echo "============================================="
+    echo
+
+    GH_PAGER= GH_FORCE_TTY=0 NO_COLOR=1 TERM=dumb gh pr diff "$PR_NUM" --repo "$REPO" --color=never
+}
