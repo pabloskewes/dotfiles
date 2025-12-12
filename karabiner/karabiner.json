@@ -25,6 +25,10 @@
                       {
                         "product_id": 8197,
                         "vendor_id": 16700
+                      },
+                      {
+                        "product_id": 32859,
+                        "vendor_id": 1149
                       }
                     ],
                     "type": "device_if"
@@ -53,6 +57,10 @@
                       {
                         "product_id": 8197,
                         "vendor_id": 16700
+                      },
+                      {
+                        "product_id": 32859,
+                        "vendor_id": 1149
                       }
                     ],
                     "type": "device_if"
@@ -81,6 +89,10 @@
                       {
                         "product_id": 8197,
                         "vendor_id": 16700
+                      },
+                      {
+                        "product_id": 32859,
+                        "vendor_id": 1149
                       }
                     ],
                     "type": "device_if"
@@ -109,6 +121,10 @@
                       {
                         "product_id": 8197,
                         "vendor_id": 16700
+                      },
+                      {
+                        "product_id": 32859,
+                        "vendor_id": 1149
                       }
                     ],
                     "type": "device_if"
@@ -166,6 +182,10 @@
                       {
                         "product_id": 8197,
                         "vendor_id": 16700
+                      },
+                      {
+                        "product_id": 32859,
+                        "vendor_id": 1149
                       }
                     ],
                     "type": "device_if"
@@ -231,6 +251,10 @@
                       {
                         "product_id": 8197,
                         "vendor_id": 16700
+                      },
+                      {
+                        "product_id": 32859,
+                        "vendor_id": 1149
                       }
                     ],
                     "type": "device_if"
@@ -445,6 +469,10 @@
                       {
                         "product_id": 8197,
                         "vendor_id": 16700
+                      },
+                      {
+                        "product_id": 32859,
+                        "vendor_id": 1149
                       }
                     ],
                     "type": "device_if"
@@ -481,6 +509,10 @@
                       {
                         "product_id": 8197,
                         "vendor_id": 16700
+                      },
+                      {
+                        "product_id": 32859,
+                        "vendor_id": 1149
                       }
                     ],
                     "type": "device_if"
@@ -525,6 +557,10 @@
                       {
                         "product_id": 8197,
                         "vendor_id": 16700
+                      },
+                      {
+                        "product_id": 32859,
+                        "vendor_id": 1149
                       }
                     ],
                     "type": "device_if"
@@ -587,6 +623,10 @@
                       {
                         "product_id": 8197,
                         "vendor_id": 16700
+                      },
+                      {
+                        "product_id": 32859,
+                        "vendor_id": 1149
                       }
                     ],
                     "type": "device_if"
