@@ -137,11 +137,20 @@ pr-inspect() {
     # 2. Configure variables
     local PR_NUM="$1"
     local REPO="${2:-Scopeo/draftnrun}"
+    
+    # 3. Files/patterns to ignore in the diff
+    local IGNORE_PATTERNS=(
+        "uv\.lock"
+        "package-lock\.json"
+        "yarn\.lock"
+        ".*\.min\.js"
+        ".*\.ipynb"
+    )
 
     echo "🔍 Searching PR #$PR_NUM in the repo: $REPO..."
     echo "---------------------------------------------------"
 
-    # Deshabilitamos pager y modo TTY para que funcione igual con o sin pipe
+    # Disable pager and TTY mode for consistent behavior with or without pipe
     GH_PAGER= GH_FORCE_TTY=0 NO_COLOR=1 TERM=dumb gh pr view "$PR_NUM" --repo "$REPO" --comments
 
     echo
@@ -162,5 +171,16 @@ pr-inspect() {
     echo "============================================="
     echo
 
-    GH_PAGER= GH_FORCE_TTY=0 NO_COLOR=1 TERM=dumb gh pr diff "$PR_NUM" --repo "$REPO" --color=never
+    # Build the regex pattern for awk (pattern1|pattern2|pattern3)
+    local pattern=""
+    for p in "${IGNORE_PATTERNS[@]}"; do
+        if [ -z "$pattern" ]; then
+            pattern="$p"
+        else
+            pattern="$pattern|$p"
+        fi
+    done
+
+    GH_PAGER= GH_FORCE_TTY=0 NO_COLOR=1 TERM=dumb gh pr diff "$PR_NUM" --repo "$REPO" --color=never | \
+        awk -v pat="$pattern" 'BEGIN {skip=0} /^diff --git/ && $0 ~ pat {skip=1} /^diff --git/ && $0 !~ pat {skip=0} !skip'
 }
