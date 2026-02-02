@@ -16,12 +16,12 @@
     "**/.ssh/config": "plaintext",
     "*.excalidraw": "json",
     "*.excalidrawlib": "json",
-    "*.rmd": "markdown"
+    "*.rmd": "markdown",
   },
   "workbench.editorAssociations": {
     "*.copilotmd": "vscode.markdown.preview.editor",
     "{git,gitlens}:/**/*.{md,csv}": "default",
-    "*.md": "default"
+    "*.md": "default",
   },
 
   // ===================================================================
@@ -33,54 +33,58 @@
     "editor.formatOnSave": true,
     "editor.codeActionsOnSave": {
       // "source.fixAll": "explicit",
-      "source.organizeImports": "explicit"
+      "source.organizeImports": "explicit",
     },
-    "python.languageServer": "Pylance"
+    "python.languageServer": "None",
   },
+  // Ruff extension settings - use project's ruff from .venv
+  "ruff.executablePath": "${workspaceFolder}/.venv/bin/ruff",
+  "ruff.enable": true,
+  "ruff.organizeImports": true,
   "[typescript]": {
     "editor.defaultFormatter": "esbenp.prettier-vscode",
-    "editor.formatOnSave": true
+    "editor.formatOnSave": true,
   },
   "[json]": {
     "editor.defaultFormatter": "esbenp.prettier-vscode",
-    "editor.formatOnSave": true
+    "editor.formatOnSave": true,
   },
   "[jsonc]": {
-    "editor.defaultFormatter": "esbenp.prettier-vscode"
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
   },
   "[javascript]": {
-    "editor.defaultFormatter": "esbenp.prettier-vscode"
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
   },
   "[markdown]": {
-    "editor.defaultFormatter": "esbenp.prettier-vscode"
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
   },
   "[c]": {
-    "editor.defaultFormatter": "ms-vscode.cpptools"
+    "editor.defaultFormatter": "ms-vscode.cpptools",
   },
   "[cpp]": {
-    "editor.defaultFormatter": "ms-vscode.cpptools"
+    "editor.defaultFormatter": "ms-vscode.cpptools",
   },
   "[typst]": {
     "editor.formatOnSave": true,
-    "editor.wordSeparators": "`~!@#$%^&*()=+[{]}\\|;:'\",.<>/?"
+    "editor.wordSeparators": "`~!@#$%^&*()=+[{]}\\|;:'\",.<>/?",
   },
   "[typst-code]": {
-    "editor.wordSeparators": "`~!@#$%^&*()=+[{]}\\|;:'\",.<>/?"
+    "editor.wordSeparators": "`~!@#$%^&*()=+[{]}\\|;:'\",.<>/?",
   },
   "[dotenv]": {
-    "editor.defaultFormatter": "foxundermoon.shell-format"
+    "editor.defaultFormatter": "foxundermoon.shell-format",
   },
   "[plaintext]": {
     "editor.formatOnSave": false,
     "editor.formatOnType": false,
-    "editor.defaultFormatter": null
+    "editor.defaultFormatter": null,
   },
   "[dockerfile]": {
     "editor.defaultFormatter": null,
-    "editor.formatOnSave": false
+    "editor.formatOnSave": false,
   },
   "[toml]": {
-    "editor.formatOnSave": false
+    "editor.formatOnSave": false,
   },
 
   // ===================================================================
@@ -97,7 +101,7 @@
     "plaintext": true,
     "markdown": true,
     "scminput": false,
-    "yaml": true
+    "yaml": true,
   },
   "github.copilot.advanced": {},
   "github.copilot.editor.enableAutoCompletions": true,
@@ -123,9 +127,9 @@
     "**/*.cer",
     "**/id_rsa",
     "**/id_dsa",
-    "**/.ssh/id_*"
+    "**/.ssh/id_*",
   ],
-  "cursorpyright.analysis.typeCheckingMode": "basic",
+  // "cursorpyright.analysis.typeCheckingMode": "basic",
 
   // ===================================================================
   // OTHER EXTENSION SETTINGS
@@ -138,7 +142,7 @@
     "--disable=W1203", // Use lazy % formatting in logging functions
     "--disable=C0115", // Missing class docstring
     "--disable=C0116", // Missing function or method docstring
-    "--disable=C0114" // Missing module docstring
+    "--disable=C0114", // Missing module docstring
   ],
 
   // ===================================================================
@@ -148,7 +152,7 @@
   "cmake.options.statusBarVisibility": "icon",
   "cmake.pinnedCommands": [
     "workbench.action.tasks.configureTaskRunner",
-    "workbench.action.tasks.runTask"
+    "workbench.action.tasks.runTask",
   ],
   "cmake.showOptionsMovedNotification": false,
   "makefile.configureOnOpen": true,
@@ -161,9 +165,11 @@
     "editor.insertSpaces": true,
     "editor.tabSize": 2,
     "editor.autoIndent": "advanced",
-    "editor.defaultFormatter": "redhat.vscode-yaml"
+    "editor.defaultFormatter": "redhat.vscode-yaml",
   },
   "[github-actions-workflow]": {
-    "editor.defaultFormatter": "redhat.vscode-yaml"
-  }
+    "editor.defaultFormatter": "redhat.vscode-yaml",
+  },
+  "gitlens.ai.model": "gemini:gemini-2.5-flash",
+  "cursor.cpp.disabledLanguages": [],
 }
