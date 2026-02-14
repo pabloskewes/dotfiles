@@ -26,3 +26,5 @@
     }; f"
 [http]
 	postBuffer = 524288000
+[init]
+	defaultBranch = main

@@ -125,6 +125,9 @@ alias lockin="$HOME/dotfiles/hammerspoon/lockin"
 # Added by Antigravity
 export PATH="/Users/pabloskewes/.antigravity/antigravity/bin:$PATH"
 
+# Karabiner
+export PATH="$PATH:/Library/Application Support/org.pqrs/Karabiner-Elements/bin"
+
 # Utility function to inspect a PR
 pr-inspect() {
     # 1. Validate that at least the PR number is passed
