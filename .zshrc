@@ -128,6 +128,12 @@ export PATH="/Users/pabloskewes/.antigravity/antigravity/bin:$PATH"
 # Karabiner
 export PATH="$PATH:/Library/Application Support/org.pqrs/Karabiner-Elements/bin"
 
+# Android
+export ANDROID_SDK_ROOT="/opt/homebrew/share/android-commandlinetools"
+export ANDROID_HOME="/opt/homebrew/share/android-commandlinetools"
+export PATH="$PATH:$ANDROID_SDK_ROOT/cmdline-tools/latest/bin"
+export PATH="$PATH:$ANDROID_SDK_ROOT/platform-tools"
+
 # Utility function to inspect a PR
 pr-inspect() {
     # 1. Validate that at least the PR number is passed

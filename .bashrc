@@ -137,3 +137,4 @@ export TMPDIR=/tmp
 export PATH=/usr/local/texlive/2024/bin/x86_64-linux:$PATH
 
 source /home/pabloskewes/.bash_completions/main.py.sh
+. "$HOME/.cargo/env"
