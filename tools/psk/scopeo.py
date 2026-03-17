@@ -1,5 +1,6 @@
 import json
 import re
+import subprocess
 from collections.abc import Iterable
 from contextlib import chdir
 from dataclasses import dataclass
@@ -185,9 +186,16 @@ def _build_readme_content(plan: InitPlan) -> str:
 
 
 def _build_workspace_payload(plan: InitPlan) -> dict:
-    folders = [{"path": str(plan.backend_worktree), "name": f"⚙️ {plan.backend_repo.name}"}]
+    folders = [
+        {"path": str(plan.backend_worktree), "name": f"⚙️ {plan.backend_repo.name}"}
+    ]
     if plan.frontend_worktree and plan.frontend_repo:
-        folders.append({"path": str(plan.frontend_worktree), "name": f"🖥️ {plan.frontend_repo.name}"})
+        folders.append(
+            {
+                "path": str(plan.frontend_worktree),
+                "name": f"🖥️ {plan.frontend_repo.name}",
+            }
+        )
     folders.append({"path": str(plan.notes_repo), "name": "📓 scopeo-notes"})
     return {
         "folders": folders,
@@ -207,10 +215,24 @@ def _write_text_if_missing(path: Path, content: str) -> None:
         path.write_text(content)
 
 
-def init_scopeo_ticket(plan: InitPlan, *, new_branch: bool = True) -> None:
+def _branch_exists(repo: Path, branch: str) -> bool:
+    result = subprocess.run(
+        ["git", "branch", "--list", branch],
+        capture_output=True,
+        text=True,
+        cwd=repo,
+    )
+    return bool(result.stdout.strip())
+
+
+def init_scopeo_ticket(plan: InitPlan) -> None:
     if not plan.backend_worktree.exists():
         with chdir(plan.backend_repo):
-            create_worktree(plan.branch, plan.backend_worktree, new_branch=new_branch)
+            create_worktree(
+                plan.branch,
+                plan.backend_worktree,
+                new_branch=not _branch_exists(plan.backend_repo, plan.branch),
+            )
 
     if (
         plan.frontend_repo
@@ -218,7 +240,11 @@ def init_scopeo_ticket(plan: InitPlan, *, new_branch: bool = True) -> None:
         and not plan.frontend_worktree.exists()
     ):
         with chdir(plan.frontend_repo):
-            create_worktree(plan.branch, plan.frontend_worktree, new_branch=new_branch)
+            create_worktree(
+                plan.branch,
+                plan.frontend_worktree,
+                new_branch=not _branch_exists(plan.frontend_repo, plan.branch),
+            )
 
     plan.journal_dir.mkdir(parents=True, exist_ok=True)
     _ensure_parent_dirs(
