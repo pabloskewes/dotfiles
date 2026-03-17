@@ -1,0 +1,58 @@
+#!/bin/bash
+# Usage: worktree-create [-b] [-d <worktrees-dir>] <branch>
+#
+#   -b    create a new branch
+#   -d    override worktrees directory (default: <repo-parent>/<repo-name>-worktrees)
+
+NEW_BRANCH=false
+WORKTREES_DIR=""
+
+while getopts "bd:" opt; do
+    case $opt in
+        b) NEW_BRANCH=true ;;
+        d) WORKTREES_DIR="$OPTARG" ;;
+        *) echo "Usage: worktree-create [-b] [-d <worktrees-dir>] <branch>" >&2; exit 1 ;;
+    esac
+done
+shift $((OPTIND - 1))
+
+BRANCH="$1"
+if [ -z "$BRANCH" ]; then
+    echo "❌ Error: Missing branch name" >&2
+    echo "Usage: worktree-create [-b] [-d <worktrees-dir>] <branch>" >&2
+    exit 1
+fi
+
+REPO_ROOT=$(git rev-parse --show-toplevel 2>/dev/null)
+if [ -z "$REPO_ROOT" ]; then
+    echo "❌ Error: Not inside a git repository" >&2
+    exit 1
+fi
+
+REPO_NAME=$(basename "$REPO_ROOT")
+
+if [ -z "$WORKTREES_DIR" ]; then
+    WORKTREES_DIR="$(dirname "$REPO_ROOT")/${REPO_NAME}-worktrees"
+fi
+
+WORKTREE_PATH="$WORKTREES_DIR/${BRANCH//\//-}"
+
+if $NEW_BRANCH; then
+    git worktree add -b "$BRANCH" "$WORKTREE_PATH"
+else
+    git worktree add "$WORKTREE_PATH" "$BRANCH"
+fi
+
+if [ $? -ne 0 ]; then
+    exit 1
+fi
+
+for file in .env .env.local .env.development.local credentials.env; do
+    if [ -f "$REPO_ROOT/$file" ]; then
+        ln -s "$REPO_ROOT/$file" "$WORKTREE_PATH/$file"
+        echo "symlinked $file"
+    fi
+done
+
+echo ""
+echo "✓ Worktree listo en: $WORKTREE_PATH"

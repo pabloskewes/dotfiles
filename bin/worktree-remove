@@ -1,0 +1,42 @@
+#!/bin/bash
+# Usage: worktree-remove [-d <worktrees-dir>] <branch>
+#
+#   -d    override worktrees directory (default: <repo-parent>/<repo-name>-worktrees)
+
+WORKTREES_DIR=""
+
+while getopts "d:" opt; do
+    case $opt in
+        d) WORKTREES_DIR="$OPTARG" ;;
+        *) echo "Usage: worktree-remove [-d <worktrees-dir>] <branch>" >&2; exit 1 ;;
+    esac
+done
+shift $((OPTIND - 1))
+
+BRANCH="$1"
+if [ -z "$BRANCH" ]; then
+    echo "❌ Error: Missing branch name" >&2
+    echo "Usage: worktree-remove [-d <worktrees-dir>] <branch>" >&2
+    exit 1
+fi
+
+REPO_ROOT=$(git rev-parse --show-toplevel 2>/dev/null)
+if [ -z "$REPO_ROOT" ]; then
+    echo "❌ Error: Not inside a git repository" >&2
+    exit 1
+fi
+
+REPO_NAME=$(basename "$REPO_ROOT")
+
+if [ -z "$WORKTREES_DIR" ]; then
+    WORKTREES_DIR="$(dirname "$REPO_ROOT")/${REPO_NAME}-worktrees"
+fi
+
+WORKTREE_PATH="$WORKTREES_DIR/${BRANCH//\//-}"
+
+git worktree remove "$WORKTREE_PATH"
+
+if [ $? -eq 0 ]; then
+    git worktree prune
+    echo "✓ Worktree eliminado: $WORKTREE_PATH"
+fi

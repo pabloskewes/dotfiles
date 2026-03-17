@@ -118,6 +118,9 @@ export PATH="/opt/homebrew/opt/openjdk/bin:$PATH"
 # Docker
 export COMPOSE_BAKE=true
 
+# Dotfiles bin
+export PATH="$HOME/dotfiles/bin:$PATH"
+
 # Aliases
 alias force-pull='git reset --hard origin/$(git rev-parse --abbrev-ref HEAD) && git pull'
 alias lockin="$HOME/dotfiles/hammerspoon/lockin"
@@ -133,63 +136,3 @@ export ANDROID_SDK_ROOT="/opt/homebrew/share/android-commandlinetools"
 export ANDROID_HOME="/opt/homebrew/share/android-commandlinetools"
 export PATH="$PATH:$ANDROID_SDK_ROOT/cmdline-tools/latest/bin"
 export PATH="$PATH:$ANDROID_SDK_ROOT/platform-tools"
-
-# Utility function to inspect a PR
-pr-inspect() {
-    # 1. Validate that at least the PR number is passed
-    if [ -z "$1" ]; then
-        echo "❌ Error: Missing PR number" >&2
-        echo "Usage: pr-inspect <number> [repo]" >&2
-        return 1
-    fi
-
-    # 2. Configure variables
-    local PR_NUM="$1"
-    local REPO="${2:-Scopeo/draftnrun}"
-    
-    # 3. Files/patterns to ignore in the diff
-    local IGNORE_PATTERNS=(
-        "uv\.lock"
-        "package-lock\.json"
-        "yarn\.lock"
-        ".*\.min\.js"
-        ".*\.ipynb"
-    )
-
-    echo "🔍 Searching PR #$PR_NUM in the repo: $REPO..."
-    echo "---------------------------------------------------"
-
-    # Disable pager and TTY mode for consistent behavior with or without pipe
-    GH_PAGER= GH_FORCE_TTY=0 NO_COLOR=1 TERM=dumb gh pr view "$PR_NUM" --repo "$REPO" --comments
-
-    echo
-    echo "============================================="
-    echo "🧵 INLINE REVIEW COMMENTS OF PR #$PR_NUM"
-    echo "============================================="
-    echo
-
-    GH_PAGER= GH_FORCE_TTY=0 gh api \
-    -H "Accept: application/vnd.github+json" \
-    "/repos/$REPO/pulls/$PR_NUM/comments" \
-    --paginate \
-    --jq '.[] | "\(.user.login)  \(.created_at)  (\(.path):\(.line // .original_line // 0))\n\(.body)\n---"'
-
-    echo
-    echo "============================================="
-    echo "📄 CODE (DIFF) OF PR #$PR_NUM"
-    echo "============================================="
-    echo
-
-    # Build the regex pattern for awk (pattern1|pattern2|pattern3)
-    local pattern=""
-    for p in "${IGNORE_PATTERNS[@]}"; do
-        if [ -z "$pattern" ]; then
-            pattern="$p"
-        else
-            pattern="$pattern|$p"
-        fi
-    done
-
-    GH_PAGER= GH_FORCE_TTY=0 NO_COLOR=1 TERM=dumb gh pr diff "$PR_NUM" --repo "$REPO" --color=never | \
-        awk -v pat="$pattern" 'BEGIN {skip=0} /^diff --git/ && $0 ~ pat {skip=1} /^diff --git/ && $0 !~ pat {skip=0} !skip'
-}
