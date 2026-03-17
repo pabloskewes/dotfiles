@@ -4,7 +4,7 @@ from typing import Optional
 
 import typer
 
-from psk.scopeo import build_init_plan, init_scopeo_ticket, render_summary
+from psk.scopeo import build_init_plan, init_scopeo_ticket, render_summary, find_worktree_for_ticket, parse_ticket, SCOPEO_ROOT, BACKEND_REPO, FRONTEND_REPO
 from psk.worktree import (
     create_worktree,
     get_repo_root,
@@ -174,6 +174,33 @@ def ticket_init(
             typer.echo(f"   cursor {plan.workspace_file}", err=True)
 
 
+@scopeo_app.command("ticket-open")
+def ticket_open(
+    ticket: str = typer.Argument(..., help="Linear ticket id or URL (e.g. DRA-996)"),
+):
+    try:
+        project, number = parse_ticket(ticket)
+    except ValueError as e:
+        typer.echo(f"❌ Error: {e}", err=True)
+        raise typer.Exit(1)
+
+    ticket_id = f"{project}-{number}"
+    backend_repo = SCOPEO_ROOT / BACKEND_REPO
+    frontend_repo = SCOPEO_ROOT / FRONTEND_REPO
+
+    backend_path = find_worktree_for_ticket(backend_repo, ticket_id) or backend_repo
+    frontend_path = find_worktree_for_ticket(frontend_repo, ticket_id)
+
+    typer.echo(f"opening backend: {backend_path}")
+    subprocess.run(["open", "-a", "Terminal", str(backend_path)])
+
+    if frontend_path:
+        typer.echo(f"opening frontend: {frontend_path}")
+        subprocess.run(["open", "-a", "Terminal", str(frontend_path)])
+    else:
+        typer.echo("no frontend worktree found — skipping")
+
+
 app = typer.Typer(help="Personal automation tools.")
 app.add_typer(worktree_app)
 app.add_typer(scopeo_app)
@@ -185,3 +212,7 @@ def main() -> None:
 
 def main_scopeo_ticket_init() -> None:
     typer.run(ticket_init)
+
+
+def main_scopeo_ticket_open() -> None:
+    typer.run(ticket_open)

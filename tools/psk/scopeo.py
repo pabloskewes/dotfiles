@@ -215,6 +215,20 @@ def _write_text_if_missing(path: Path, content: str) -> None:
         path.write_text(content)
 
 
+def find_worktree_for_ticket(repo: Path, ticket_id: str) -> Path | None:
+    result = subprocess.run(
+        ["git", "worktree", "list", "--porcelain"],
+        capture_output=True, text=True, cwd=repo,
+    )
+    number = ticket_id.split("-")[-1]
+    for line in result.stdout.splitlines():
+        if line.startswith("worktree "):
+            path = Path(line[len("worktree "):])
+            if f"-{number}-" in path.name or path.name.endswith(f"-{number}"):
+                return path
+    return None
+
+
 def _branch_exists(repo: Path, branch: str) -> bool:
     result = subprocess.run(
         ["git", "branch", "--list", branch],
