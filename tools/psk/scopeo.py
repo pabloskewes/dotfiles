@@ -185,10 +185,10 @@ def _build_readme_content(plan: InitPlan) -> str:
 
 
 def _build_workspace_payload(plan: InitPlan) -> dict:
-    folders = [{"path": str(plan.backend_worktree)}]
-    if plan.frontend_worktree:
-        folders.append({"path": str(plan.frontend_worktree)})
-    folders.append({"path": str(plan.notes_repo)})
+    folders = [{"path": str(plan.backend_worktree), "name": f"⚙️ {plan.backend_repo.name}"}]
+    if plan.frontend_worktree and plan.frontend_repo:
+        folders.append({"path": str(plan.frontend_worktree), "name": f"🖥️ {plan.frontend_repo.name}"})
+    folders.append({"path": str(plan.notes_repo), "name": "📓 scopeo-notes"})
     return {
         "folders": folders,
         "settings": {
