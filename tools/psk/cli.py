@@ -2,9 +2,20 @@ import shutil
 import subprocess
 from typing import Optional
 
+import questionary
 import typer
 
-from psk.scopeo import build_init_plan, init_scopeo_ticket, render_summary, find_worktree_for_ticket, parse_ticket, SCOPEO_ROOT, BACKEND_REPO, FRONTEND_REPO
+from psk.scopeo import (
+    BACKEND_REPO,
+    FRONTEND_REPO,
+    SCOPEO_ROOT,
+    build_init_plan,
+    find_worktree_for_ticket,
+    init_scopeo_ticket,
+    list_active_tickets,
+    parse_ticket,
+    render_summary,
+)
 from psk.worktree import (
     create_worktree,
     get_repo_root,
@@ -176,8 +187,26 @@ def ticket_init(
 
 @scopeo_app.command("ticket-open")
 def ticket_open(
-    ticket: str = typer.Argument(..., help="Linear ticket id or URL (e.g. DRA-996)"),
+    ticket: Optional[str] = typer.Argument(
+        None, help="Linear ticket id or URL (e.g. DRA-996)"
+    ),
 ):
+    if ticket is None:
+        active = list_active_tickets(SCOPEO_ROOT / BACKEND_REPO, SCOPEO_ROOT / FRONTEND_REPO)
+        if not active:
+            typer.echo("no active worktrees found", err=True)
+            raise typer.Exit(1)
+        choices = [
+            questionary.Choice(
+                title=f"{t.ticket_id:<10}  {t.slug}",
+                value=t.ticket_id,
+            )
+            for t in active
+        ]
+        ticket = questionary.select("Select ticket:", choices=choices).ask()  # type: ignore[assignment]
+        if ticket is None:
+            raise typer.Exit(0)
+
     try:
         project, number = parse_ticket(ticket)
     except ValueError as e:
@@ -189,16 +218,13 @@ def ticket_open(
     frontend_repo = SCOPEO_ROOT / FRONTEND_REPO
 
     backend_path = find_worktree_for_ticket(backend_repo, ticket_id) or backend_repo
-    frontend_path = find_worktree_for_ticket(frontend_repo, ticket_id)
+    frontend_path = find_worktree_for_ticket(frontend_repo, ticket_id) or frontend_repo
 
     typer.echo(f"opening backend: {backend_path}")
     subprocess.run(["open", "-a", "Terminal", str(backend_path)])
 
-    if frontend_path:
-        typer.echo(f"opening frontend: {frontend_path}")
-        subprocess.run(["open", "-a", "Terminal", str(frontend_path)])
-    else:
-        typer.echo("no frontend worktree found — skipping")
+    typer.echo(f"opening frontend: {frontend_path}")
+    subprocess.run(["open", "-a", "Terminal", str(frontend_path)])
 
 
 app = typer.Typer(help="Personal automation tools.")

@@ -215,15 +215,57 @@ def _write_text_if_missing(path: Path, content: str) -> None:
         path.write_text(content)
 
 
+@dataclass
+class ActiveTicket:
+    ticket_id: str
+    slug: str
+    has_frontend: bool
+
+
+def list_active_tickets(backend_repo: Path, frontend_repo: Path) -> list[ActiveTicket]:
+    def _worktree_names(repo: Path) -> set[str]:
+        result = subprocess.run(
+            ["git", "worktree", "list", "--porcelain"],
+            capture_output=True,
+            text=True,
+            cwd=repo,
+        )
+        return {
+            Path(line[len("worktree ") :]).name
+            for line in result.stdout.splitlines()
+            if line.startswith("worktree ")
+        }
+
+    backend_names = _worktree_names(backend_repo)
+    frontend_names = _worktree_names(frontend_repo)
+
+    tickets = []
+    for name in backend_names:
+        match = re.search(r"-([a-z]+)-(\d+)-(.+)", name)
+        if not match:
+            continue
+        ticket_id = f"{match.group(1).upper()}-{match.group(2)}"
+        slug = match.group(3)
+        has_frontend = name in frontend_names
+        tickets.append(
+            ActiveTicket(ticket_id=ticket_id, slug=slug, has_frontend=has_frontend)
+        )
+
+    tickets.sort(key=lambda t: t.ticket_id)
+    return tickets
+
+
 def find_worktree_for_ticket(repo: Path, ticket_id: str) -> Path | None:
     result = subprocess.run(
         ["git", "worktree", "list", "--porcelain"],
-        capture_output=True, text=True, cwd=repo,
+        capture_output=True,
+        text=True,
+        cwd=repo,
     )
     number = ticket_id.split("-")[-1]
     for line in result.stdout.splitlines():
         if line.startswith("worktree "):
-            path = Path(line[len("worktree "):])
+            path = Path(line[len("worktree ") :])
             if f"-{number}-" in path.name or path.name.endswith(f"-{number}"):
                 return path
     return None
