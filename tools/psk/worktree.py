@@ -53,7 +53,34 @@ def create_worktree(branch: str, path: Path, new_branch: bool = False) -> None:
             print(f"symlinked {filename}")
 
 
+def list_worktrees() -> list[dict[str, str]]:
+    result = subprocess.run(
+        ["git", "worktree", "list", "--porcelain"],
+        capture_output=True,
+        text=True,
+    )
+    if result.returncode != 0:
+        raise RuntimeError("Failed to list worktrees")
+
+    worktrees = []
+    current: dict[str, str] = {}
+    for line in result.stdout.splitlines():
+        if line.startswith("worktree "):
+            current = {"path": line[len("worktree ") :]}
+        elif line.startswith("branch "):
+            current["branch"] = line[len("branch refs/heads/") :]
+        elif line.startswith("HEAD "):
+            current["sha"] = line[len("HEAD ") :][:7]
+        elif line == "" and current:
+            worktrees.append(current)
+            current = {}
+    if current:
+        worktrees.append(current)
+    return worktrees
+
+
 def remove_worktree(path: Path) -> None:
     result = subprocess.run(["git", "worktree", "remove", str(path)])
-    if result.returncode == 0:
-        subprocess.run(["git", "worktree", "prune"])
+    if result.returncode != 0:
+        raise SystemExit(1)
+    subprocess.run(["git", "worktree", "prune"])

@@ -6,8 +6,7 @@ requires-python = ">=3.11"
 dependencies = ["typer>=0.15.1"]
 
 [project.scripts]
-worktree-create = "psk.cli:worktree_create_app"
-worktree-remove = "psk.cli:worktree_remove_app"
+worktree = "psk.cli:main"
 
 [build-system]
 requires = ["setuptools"]
