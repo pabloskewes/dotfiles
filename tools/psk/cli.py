@@ -210,9 +210,5 @@ def main() -> None:
     app()
 
 
-def main_scopeo_ticket_init() -> None:
-    typer.run(ticket_init)
-
-
-def main_scopeo_ticket_open() -> None:
-    typer.run(ticket_open)
+def main_scopeo() -> None:
+    scopeo_app()
