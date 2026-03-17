@@ -9,6 +9,14 @@ dependencies = ["typer>=0.15.1", "questionary>=2.0"]
 worktree = "psk.cli:main"
 scopeo = "psk.cli:main_scopeo"
 
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
 [build-system]
 requires = ["setuptools"]
 build-backend = "setuptools.build_meta"
+
+[dependency-groups]
+dev = [
+    "pytest>=9.0.2",
+]
