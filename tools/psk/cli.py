@@ -126,13 +126,15 @@ def ticket_init(
         False, "--open", help="Open workspace in Cursor after init"
     ),
 ):
+    interactive = not yes and not dry_run
+
     if slug is None:
-        if yes:
-            typer.echo("❌ Error: slug is required when using --yes", err=True)
+        if not interactive:
+            typer.echo("❌ Error: slug is required in non-interactive mode", err=True)
             raise typer.Exit(1)
         slug = typer.prompt("Slug")
 
-    if not yes and not with_frontend:
+    if interactive and not with_frontend:
         with_frontend = typer.confirm("Include frontend?", default=False)
 
     try:
@@ -153,7 +155,7 @@ def ticket_init(
     if dry_run:
         return
 
-    if not yes and not typer.confirm("\nProceed?"):
+    if interactive and not typer.confirm("\nProceed?"):
         raise typer.Exit(0)
 
     try:
