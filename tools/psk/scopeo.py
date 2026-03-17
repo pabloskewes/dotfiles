@@ -225,6 +225,13 @@ def _branch_exists(repo: Path, branch: str) -> bool:
     return bool(result.stdout.strip())
 
 
+def _run_setup(worktree: Path, cmd: list[str]) -> None:
+    print(f"running {' '.join(cmd)} in {worktree.name}...")
+    result = subprocess.run(cmd, cwd=worktree)
+    if result.returncode != 0:
+        print(f"⚠️  {cmd[0]} exited with code {result.returncode} — continuing anyway")
+
+
 def init_scopeo_ticket(plan: InitPlan) -> None:
     if not plan.backend_worktree.exists():
         with chdir(plan.backend_repo):
@@ -233,6 +240,7 @@ def init_scopeo_ticket(plan: InitPlan) -> None:
                 plan.backend_worktree,
                 new_branch=not _branch_exists(plan.backend_repo, plan.branch),
             )
+        _run_setup(plan.backend_worktree, ["uv", "sync"])
 
     if (
         plan.frontend_repo
@@ -245,6 +253,7 @@ def init_scopeo_ticket(plan: InitPlan) -> None:
                 plan.frontend_worktree,
                 new_branch=not _branch_exists(plan.frontend_repo, plan.branch),
             )
+        _run_setup(plan.frontend_worktree, ["npm", "install"])
 
     plan.journal_dir.mkdir(parents=True, exist_ok=True)
     _ensure_parent_dirs(
