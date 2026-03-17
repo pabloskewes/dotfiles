@@ -134,7 +134,10 @@ def render_summary(plan: InitPlan) -> str:
         ("backend_repo", str(plan.backend_repo)),
         ("backend_worktree", str(plan.backend_worktree)),
         ("frontend_repo", str(plan.frontend_repo) if plan.frontend_repo else "-"),
-        ("frontend_worktree", str(plan.frontend_worktree) if plan.frontend_worktree else "-"),
+        (
+            "frontend_worktree",
+            str(plan.frontend_worktree) if plan.frontend_worktree else "-",
+        ),
         ("journal_folder", plan.journal_folder),
         ("workspace_file", str(plan.workspace_file)),
     ]
@@ -160,20 +163,24 @@ def _build_readme_content(plan: InitPlan) -> str:
         f"      - {plan.branch}",
     ]
     if plan.frontend_repo:
-        lines.extend([
-            f'  - repo: "Scopeo/{plan.frontend_repo.name}"',
-            "    branches:",
-            f"      - {plan.branch}",
-        ])
-    lines.extend([
-        "prs: []",
-        "tags: []",
-        f"updated: {started}",
-        "---",
-        "",
-        f"# {plan.ticket_id} — {plan.journal_folder}",
-        "",
-    ])
+        lines.extend(
+            [
+                f'  - repo: "Scopeo/{plan.frontend_repo.name}"',
+                "    branches:",
+                f"      - {plan.branch}",
+            ]
+        )
+    lines.extend(
+        [
+            "prs: []",
+            "tags: []",
+            f"updated: {started}",
+            "---",
+            "",
+            f"# {plan.ticket_id} — {plan.journal_folder}",
+            "",
+        ]
+    )
     return "\n".join(lines)
 
 
@@ -205,12 +212,22 @@ def init_scopeo_ticket(plan: InitPlan, *, new_branch: bool = True) -> None:
         with chdir(plan.backend_repo):
             create_worktree(plan.branch, plan.backend_worktree, new_branch=new_branch)
 
-    if plan.frontend_repo and plan.frontend_worktree and not plan.frontend_worktree.exists():
+    if (
+        plan.frontend_repo
+        and plan.frontend_worktree
+        and not plan.frontend_worktree.exists()
+    ):
         with chdir(plan.frontend_repo):
             create_worktree(plan.branch, plan.frontend_worktree, new_branch=new_branch)
 
     plan.journal_dir.mkdir(parents=True, exist_ok=True)
-    _ensure_parent_dirs([plan.workspace_file, plan.journal_dir / "README.md", plan.journal_dir / "00-plan.md"])
+    _ensure_parent_dirs(
+        [
+            plan.workspace_file,
+            plan.journal_dir / "README.md",
+            plan.journal_dir / "00-plan.md",
+        ]
+    )
 
     _write_text_if_missing(plan.journal_dir / "README.md", _build_readme_content(plan))
     _write_text_if_missing(plan.journal_dir / "00-plan.md", "")
