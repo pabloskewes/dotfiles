@@ -49,6 +49,8 @@ def create_worktree(branch: str, path: Path, new_branch: bool = False) -> None:
         src = repo_root / filename
         dst = path / filename
         if src.is_file():
+            if dst.exists() or dst.is_symlink():
+                continue
             dst.symlink_to(src)
             print(f"symlinked {filename}")
 

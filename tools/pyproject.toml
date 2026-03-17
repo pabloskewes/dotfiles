@@ -7,6 +7,7 @@ dependencies = ["typer>=0.15.1"]
 
 [project.scripts]
 worktree = "psk.cli:main"
+scopeo-ticket-init = "psk.cli:main_scopeo_ticket_init"
 
 [build-system]
 requires = ["setuptools"]
