@@ -17,6 +17,7 @@ from psk.scopeo import (
     build_journal_folder,
     build_ticket_parts,
     find_worktree_for_ticket,
+    find_workspace_for_ticket,
     init_scopeo_ticket,
     list_active_tickets,
     parse_ticket,
@@ -472,6 +473,55 @@ class TestWriteTextIfMissing:
         target.write_text("original")
         _write_text_if_missing(target, "new content")
         assert target.read_text() == "original"
+
+
+# ---------------------------------------------------------------------------
+# find_workspace_for_ticket
+# ---------------------------------------------------------------------------
+
+
+class TestFindWorkspaceForTicket:
+    def test_returns_workspace_when_exists(self, tmp_path):
+        notes_repo = tmp_path / "scopeo-notes"
+        journal_dir = notes_repo / "journals" / "1049-my-feature"
+        journal_dir.mkdir(parents=True)
+        workspace = journal_dir / "1049-my-feature.code-workspace"
+        workspace.write_text("{}")
+
+        backend_wt = tmp_path / "draftnrun-worktrees" / "pablo-dra-1049-my-feature"
+        result = find_workspace_for_ticket(backend_wt, notes_repo)
+
+        assert result == workspace
+
+    def test_returns_none_when_workspace_missing(self, tmp_path):
+        notes_repo = tmp_path / "scopeo-notes"
+        notes_repo.mkdir(parents=True)
+
+        backend_wt = tmp_path / "draftnrun-worktrees" / "pablo-dra-1049-my-feature"
+        result = find_workspace_for_ticket(backend_wt, notes_repo)
+
+        assert result is None
+
+    def test_returns_none_for_unrecognized_worktree_name(self, tmp_path):
+        notes_repo = tmp_path / "scopeo-notes"
+        notes_repo.mkdir()
+
+        backend_wt = tmp_path / "draftnrun"  # main worktree, no ticket pattern
+        result = find_workspace_for_ticket(backend_wt, notes_repo)
+
+        assert result is None
+
+    def test_zero_pads_number_in_journal_folder(self, tmp_path):
+        notes_repo = tmp_path / "scopeo-notes"
+        journal_dir = notes_repo / "journals" / "0042-fix-bug"
+        journal_dir.mkdir(parents=True)
+        workspace = journal_dir / "0042-fix-bug.code-workspace"
+        workspace.write_text("{}")
+
+        backend_wt = tmp_path / "draftnrun-worktrees" / "pablo-bac-42-fix-bug"
+        result = find_workspace_for_ticket(backend_wt, notes_repo)
+
+        assert result == workspace
 
 
 # ---------------------------------------------------------------------------

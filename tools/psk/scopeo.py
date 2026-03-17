@@ -255,6 +255,18 @@ def list_active_tickets(backend_repo: Path, frontend_repo: Path) -> list[ActiveT
     return tickets
 
 
+def find_workspace_for_ticket(backend_worktree: Path, notes_repo: Path) -> Path | None:
+    """Derive the .code-workspace path from a backend worktree path, if it exists."""
+    match = re.search(r"-([a-z]+)-(\d+)-(.+)", backend_worktree.name)
+    if not match:
+        return None
+    number = int(match.group(2))
+    slug = match.group(3)
+    journal_folder = f"{number:04d}-{slug}"
+    workspace = notes_repo / JOURNALS_DIR / journal_folder / f"{journal_folder}.code-workspace"
+    return workspace if workspace.exists() else None
+
+
 def find_worktree_for_ticket(repo: Path, ticket_id: str) -> Path | None:
     result = subprocess.run(
         ["git", "worktree", "list", "--porcelain"],

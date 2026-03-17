@@ -8,9 +8,11 @@ import typer
 from psk.scopeo import (
     BACKEND_REPO,
     FRONTEND_REPO,
+    NOTES_REPO,
     SCOPEO_ROOT,
     build_init_plan,
     find_worktree_for_ticket,
+    find_workspace_for_ticket,
     init_scopeo_ticket,
     list_active_tickets,
     parse_ticket,
@@ -216,6 +218,7 @@ def ticket_open(
     ticket_id = f"{project}-{number}"
     backend_repo = SCOPEO_ROOT / BACKEND_REPO
     frontend_repo = SCOPEO_ROOT / FRONTEND_REPO
+    notes_repo = SCOPEO_ROOT / NOTES_REPO
 
     backend_path = find_worktree_for_ticket(backend_repo, ticket_id) or backend_repo
     frontend_path = find_worktree_for_ticket(frontend_repo, ticket_id) or frontend_repo
@@ -225,6 +228,15 @@ def ticket_open(
 
     typer.echo(f"opening frontend: {frontend_path}")
     subprocess.run(["open", "-a", "Terminal", str(frontend_path)])
+
+    workspace = find_workspace_for_ticket(backend_path, notes_repo)
+    if workspace:
+        cursor_bin = shutil.which("cursor")
+        if cursor_bin:
+            typer.echo(f"opening workspace: {workspace}")
+            subprocess.run([cursor_bin, str(workspace)])
+        else:
+            typer.echo(f"⚠️  cursor not found — open manually: cursor {workspace}", err=True)
 
 
 app = typer.Typer(help="Personal automation tools.")
