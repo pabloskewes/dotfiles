@@ -1,75 +1,63 @@
 """
 Database migration helpers for Scopeo/draftnrun worktree workflow.
 
-Provides `get_main_head()` to resolve the alembic HEAD of origin/main
-without checking out the branch, using git-archive + alembic's ScriptDirectory.
+Resolves the alembic HEAD of main by running `alembic heads` in the primary
+draftnrun checkout (~/Scopeo/draftnrun), which is always on main and has all
+project dependencies available via `uv run`.
 """
 
+import re
 import subprocess
-import tarfile
-import tempfile
 from pathlib import Path
 
 from alembic import command
 from alembic.config import Config
-from alembic.script import ScriptDirectory
 
-# Relative path to alembic config inside the draftnrun repo
+from psk.scopeo import BACKEND_REPO, SCOPEO_ROOT
+
 _ALEMBIC_INI = "ada_backend/database/alembic.ini"
-_ALEMBIC_DIR = "ada_backend/database/alembic"
+_MAIN_REPO = SCOPEO_ROOT / BACKEND_REPO
 
 
-def get_main_head(repo_root: Path) -> str:
+def get_main_head() -> str:
     """
-    Return the alembic HEAD revision of origin/main without checking out the branch.
+    Return the alembic HEAD revision of main by running `alembic heads`
+    in the primary draftnrun checkout.
 
     Raises:
-        RuntimeError: if main has multiple heads (needs manual resolution).
-        subprocess.CalledProcessError: if git archive fails.
+        RuntimeError: if main has 0 or multiple heads.
     """
-    with tempfile.TemporaryDirectory() as tmpdir:
-        tmp = Path(tmpdir)
+    result = subprocess.run(
+        ["uv", "run", "alembic", "--config", _ALEMBIC_INI, "heads"],
+        check=True,
+        capture_output=True,
+        text=True,
+        cwd=_MAIN_REPO,
+    )
+    # Each head line looks like: "a3b4c5d6e7e8 (head)"
+    heads = re.findall(r"^([a-f0-9]+)\s+\(head\)", result.stdout, re.MULTILINE)
 
-        # Extract only alembic files from origin/main into a temp dir
-        archive_path = tmp / "archive.tar"
-        with open(archive_path, "wb") as f:
-            subprocess.run(
-                ["git", "archive", "origin/main", _ALEMBIC_INI, _ALEMBIC_DIR],
-                stdout=f,
-                check=True,
-                cwd=repo_root,
-            )
+    if len(heads) != 1:
+        raise RuntimeError(
+            f"draftnrun/main has {len(heads)} alembic heads: {heads}\n"
+            "Resolve the divergence on main before running db-reset-to-main."
+        )
 
-        with tarfile.open(archive_path) as tar:
-            tar.extractall(tmp)
-
-        cfg = Config(str(tmp / _ALEMBIC_INI))
-        cfg.set_main_option("script_location", str(tmp / _ALEMBIC_DIR))
-        script = ScriptDirectory.from_config(cfg)
-        heads = script.get_heads()
-
-        if len(heads) != 1:
-            raise RuntimeError(
-                f"origin/main has multiple alembic heads: {heads}\n"
-                "Resolve the divergence on main before running db-reset-to-main."
-            )
-
-        return heads[0]
+    return heads[0]
 
 
 def reset_to_main(
     repo_root: Path, *, upgrade: bool = False, dry_run: bool = False
 ) -> None:
     """
-    Downgrade the DB to origin/main HEAD, optionally upgrade to branch HEAD after.
+    Downgrade the DB to main HEAD, optionally upgrade to branch HEAD after.
 
     Args:
         repo_root: path to the draftnrun worktree (where alembic.ini lives under ada_backend/).
         upgrade: if True, also run `alembic upgrade head` after downgrading.
         dry_run: if True, print the planned revisions without touching the DB.
     """
-    subprocess.run(["git", "fetch", "origin", "main"], check=True, cwd=repo_root)
-    main_head = get_main_head(repo_root)
+    main_head = get_main_head()
 
     if dry_run:
         print(f"would downgrade to main HEAD: {main_head}")
