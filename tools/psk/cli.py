@@ -6,7 +6,7 @@ from typing import Optional
 import questionary
 import typer
 
-from psk.db import get_main_head, reset_to_main
+from psk.db import reset_to_main
 from psk.scopeo import (
     BACKEND_REPO,
     FRONTEND_REPO,
@@ -120,19 +120,16 @@ def list_cmd():
 @scopeo_app.command("db-reset-to-main")
 def db_reset_to_main(
     upgrade: bool = typer.Option(
-        False, "--upgrade", help="Also run 'alembic upgrade head' after downgrading"
+        False, "--upgrade", help="Also run 'alembic upgrade head' from cwd after resetting"
     ),
     dry_run: bool = typer.Option(
-        False, "--dry-run", help="Print planned revisions without touching the DB"
-    ),
-    repo: Optional[str] = typer.Option(
-        None, "--repo", help="Path to the draftnrun worktree (defaults to cwd)"
+        False, "--dry-run", help="Show what would happen without touching the DB"
     ),
 ):
-    """Downgrade DB to origin/main HEAD. Optionally upgrade to branch HEAD with --upgrade."""
-    repo_root = Path(repo) if repo else Path.cwd()
+    """Strip branch migrations from DB, returning it to main's alembic state."""
+    upgrade_to = Path.cwd() if upgrade else None
     try:
-        reset_to_main(repo_root, upgrade=upgrade, dry_run=dry_run)
+        reset_to_main(upgrade_to=upgrade_to, dry_run=dry_run)
     except RuntimeError as e:
         typer.echo(f"❌ {e}", err=True)
         raise typer.Exit(1)
