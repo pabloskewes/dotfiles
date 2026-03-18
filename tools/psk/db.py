@@ -1,22 +1,37 @@
 """
 Database migration helpers for Scopeo/draftnrun worktree workflow.
 
-Resolves the alembic HEAD of main by running `alembic heads` in the primary
-draftnrun checkout (~/Scopeo/draftnrun), which is always on main and has all
-project dependencies available via `uv run`.
+All alembic commands run via `uv run alembic` subprocess so they use the
+project's own venv (with all its dependencies) rather than psk's environment.
 """
 
 import re
+import shutil
 import subprocess
 from pathlib import Path
-
-from alembic import command
-from alembic.config import Config
 
 from psk.scopeo import BACKEND_REPO, SCOPEO_ROOT
 
 _ALEMBIC_INI = "ada_backend/database/alembic.ini"
 _MAIN_REPO = SCOPEO_ROOT / BACKEND_REPO
+
+
+def _check_prerequisites() -> None:
+    """Verify that required external tools are available on PATH."""
+    if not shutil.which("uv"):
+        raise RuntimeError(
+            "'uv' not found on PATH. Install it from https://docs.astral.sh/uv/"
+        )
+
+
+def _run_alembic(cwd: Path, *args: str) -> subprocess.CompletedProcess[str]:
+    return subprocess.run(
+        ["uv", "run", "alembic", "--config", _ALEMBIC_INI, *args],
+        check=True,
+        capture_output=True,
+        text=True,
+        cwd=cwd,
+    )
 
 
 def get_main_head() -> str:
@@ -27,14 +42,7 @@ def get_main_head() -> str:
     Raises:
         RuntimeError: if main has 0 or multiple heads.
     """
-    result = subprocess.run(
-        ["uv", "run", "alembic", "--config", _ALEMBIC_INI, "heads"],
-        check=True,
-        capture_output=True,
-        text=True,
-        cwd=_MAIN_REPO,
-    )
-    # Each head line looks like: "a3b4c5d6e7e8 (head)"
+    result = _run_alembic(_MAIN_REPO, "heads")
     heads = re.findall(r"^([a-f0-9]+)\s+\(head\)", result.stdout, re.MULTILINE)
 
     if len(heads) != 1:
@@ -46,9 +54,7 @@ def get_main_head() -> str:
     return heads[0]
 
 
-def reset_to_main(
-    repo_root: Path, *, upgrade: bool = False, dry_run: bool = False
-) -> None:
+def reset_to_main(repo_root: Path, *, upgrade: bool = False, dry_run: bool = False) -> None:
     """
     Downgrade the DB to main HEAD, optionally upgrade to branch HEAD after.
 
@@ -57,6 +63,7 @@ def reset_to_main(
         upgrade: if True, also run `alembic upgrade head` after downgrading.
         dry_run: if True, print the planned revisions without touching the DB.
     """
+    _check_prerequisites()
     main_head = get_main_head()
 
     if dry_run:
@@ -65,11 +72,13 @@ def reset_to_main(
             print("would upgrade to branch HEAD (alembic upgrade head)")
         return
 
-    cfg = Config(str(repo_root / _ALEMBIC_INI))
-
     print(f"Downgrading to main HEAD: {main_head}")
-    command.downgrade(cfg, main_head)
+    result = _run_alembic(repo_root, "downgrade", main_head)
+    if result.stdout:
+        print(result.stdout, end="")
 
     if upgrade:
         print("Upgrading to branch HEAD...")
-        command.upgrade(cfg, "head")
+        result = _run_alembic(repo_root, "upgrade", "head")
+        if result.stdout:
+            print(result.stdout, end="")
