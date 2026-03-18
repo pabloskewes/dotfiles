@@ -25,11 +25,21 @@ def _check_prerequisites() -> None:
 
 
 def _run_alembic(cwd: Path, *args: str) -> subprocess.CompletedProcess[str]:
+    """Run alembic and capture output (for commands whose output needs parsing)."""
     return subprocess.run(
         ["uv", "run", "alembic", "--config", _ALEMBIC_INI, *args],
         check=True,
         capture_output=True,
         text=True,
+        cwd=cwd,
+    )
+
+
+def _stream_alembic(cwd: Path, *args: str) -> None:
+    """Run alembic with output streamed directly to the terminal."""
+    subprocess.run(
+        ["uv", "run", "alembic", "--config", _ALEMBIC_INI, *args],
+        check=True,
         cwd=cwd,
     )
 
@@ -73,12 +83,8 @@ def reset_to_main(repo_root: Path, *, upgrade: bool = False, dry_run: bool = Fal
         return
 
     print(f"Downgrading to main HEAD: {main_head}")
-    result = _run_alembic(repo_root, "downgrade", main_head)
-    if result.stdout:
-        print(result.stdout, end="")
+    _stream_alembic(repo_root, "downgrade", main_head)
 
     if upgrade:
         print("Upgrading to branch HEAD...")
-        result = _run_alembic(repo_root, "upgrade", "head")
-        if result.stdout:
-            print(result.stdout, end="")
+        _stream_alembic(repo_root, "upgrade", "head")
