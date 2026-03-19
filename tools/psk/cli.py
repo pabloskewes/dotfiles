@@ -32,6 +32,7 @@ from psk.worktree import (
 worktree_app = typer.Typer(name="worktree", help="Manage git worktrees.")
 scopeo_app = typer.Typer(name="scopeo", help="Scopeo-specific helpers.")
 pr_inspect_app = typer.Typer(name="pr-inspect", help="Inspect a GitHub pull request.")
+squash_app = typer.Typer(name="squash", invoke_without_command=True)
 
 
 @worktree_app.command()
@@ -287,6 +288,16 @@ def inspect(
         raise typer.Exit(int(e.code) if e.code is not None else 1)
 
 
+@squash_app.callback()
+def squash_default(
+    base: str = typer.Option("main", "--base", "-b", help="Base branch to compare against"),
+):
+    """Interactive TUI for squashing and reordering commits."""
+    from psk.git_tui import run_app
+
+    run_app(base)
+
+
 def main_worktree() -> None:
     worktree_app()
 
@@ -297,3 +308,7 @@ def main_scopeo() -> None:
 
 def main_pr_inspect() -> None:
     pr_inspect_app()
+
+
+def main_squash() -> None:
+    squash_app()

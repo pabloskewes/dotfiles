@@ -1,0 +1,71 @@
+#commits {
+    height: 1fr;
+}
+
+SquashScreen {
+    align: center middle;
+}
+
+#squash-dialog {
+    width: 80;
+    max-width: 90%;
+    height: auto;
+    max-height: 80%;
+    padding: 1 2;
+    border: thick $accent;
+    background: $surface;
+}
+
+#squash-title {
+    text-style: bold;
+    width: 100%;
+    content-align: center middle;
+    margin-bottom: 1;
+}
+
+#title-input {
+    margin-bottom: 1;
+}
+
+#body-input {
+    height: 8;
+    margin-bottom: 1;
+}
+
+#squash-hint {
+    text-style: dim italic;
+    width: 100%;
+    content-align: center middle;
+}
+
+CommitDetailScreen {
+    align: center middle;
+}
+
+#detail-dialog {
+    width: 90;
+    max-width: 95%;
+    height: 30;
+    max-height: 85%;
+    padding: 1 2;
+    border: thick $accent;
+    background: $surface;
+}
+
+#detail-title {
+    text-style: bold;
+    width: 100%;
+    content-align: center middle;
+    margin-bottom: 1;
+}
+
+#detail-body {
+    height: 1fr;
+    margin-bottom: 1;
+}
+
+#detail-hint {
+    text-style: dim italic;
+    width: 100%;
+    content-align: center middle;
+}
