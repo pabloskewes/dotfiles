@@ -3,12 +3,14 @@ from __future__ import annotations
 import subprocess
 import time
 
-from textual import events
+from textual import on
 from textual.app import App, ComposeResult
 from textual.binding import Binding
 from textual.containers import Vertical
+from textual.message import Message
 from textual.screen import ModalScreen
 from textual.widgets import DataTable, Footer, Header, Input, Static, TextArea
+
 
 from psk.git_tui.git_ops import (
     Commit,
@@ -20,6 +22,36 @@ from psk.git_tui.git_ops import (
     get_merge_base,
     has_uncommitted_changes,
 )
+
+
+class CommitTable(DataTable):
+    """DataTable subclass that emits a message on double-click."""
+
+    _DOUBLE_CLICK_THRESHOLD = 0.4
+
+    class RowDoubleClicked(Message):
+        def __init__(self, row: int) -> None:
+            super().__init__()
+            self.row = row
+
+    def __init__(self, **kwargs) -> None:  # type: ignore[no-untyped-def]
+        super().__init__(**kwargs)
+        self._last_click_time: float = 0.0
+        self._last_click_row: int = -1
+
+    def on_click(self) -> None:
+        now = time.monotonic()
+        row = self.cursor_row
+        if (
+            row == self._last_click_row
+            and (now - self._last_click_time) < self._DOUBLE_CLICK_THRESHOLD
+        ):
+            self.post_message(self.RowDoubleClicked(row))
+            self._last_click_time = 0.0
+            self._last_click_row = -1
+        else:
+            self._last_click_time = now
+            self._last_click_row = row
 
 
 class CommitDetailScreen(ModalScreen[None]):
@@ -106,8 +138,6 @@ class GitTuiApp(App[str | None]):
         Binding("ctrl+down", "move_down", "Move ↓", show=False),
     ]
 
-    _DOUBLE_CLICK_THRESHOLD = 0.4
-
     def __init__(self, base_branch: str = "main") -> None:
         super().__init__()
         self.base_branch = base_branch
@@ -115,11 +145,10 @@ class GitTuiApp(App[str | None]):
         self.commits: list[Commit] = []
         self.selected: set[int] = set()
         self.original_shas: list[str] = []
-        self._last_click: tuple[float, int, int] = (0.0, -1, -1)
 
     def compose(self) -> ComposeResult:
         yield Header()
-        yield DataTable(id="commits")
+        yield CommitTable(id="commits")
         yield Footer()
 
     def on_mount(self) -> None:
@@ -138,7 +167,7 @@ class GitTuiApp(App[str | None]):
             self.exit(result=f"No commits between HEAD and {self.base_branch}")
             return
 
-        table = self.query_one("#commits", DataTable)
+        table = self.query_one("#commits", CommitTable)
         table.cursor_type = "row"
         table.zebra_stripes = True
         table.add_columns(" ", "SHA", "Message", "Author")
@@ -149,7 +178,7 @@ class GitTuiApp(App[str | None]):
     # ------------------------------------------------------------------
 
     def _refresh_table(self) -> None:
-        table = self.query_one("#commits", DataTable)
+        table = self.query_one("#commits", CommitTable)
         row = table.cursor_row
         table.clear()
         for i, c in enumerate(self.commits):
@@ -162,7 +191,7 @@ class GitTuiApp(App[str | None]):
     # ------------------------------------------------------------------
 
     def action_toggle_select(self) -> None:
-        table = self.query_one("#commits", DataTable)
+        table = self.query_one("#commits", CommitTable)
         idx = table.cursor_row
         self.selected.symmetric_difference_update({idx})
         self._refresh_table()
@@ -192,7 +221,7 @@ class GitTuiApp(App[str | None]):
         self.selected = new
 
     def action_move_up(self) -> None:
-        table = self.query_one("#commits", DataTable)
+        table = self.query_one("#commits", CommitTable)
         idx = table.cursor_row
         if idx <= 0:
             return
@@ -201,7 +230,7 @@ class GitTuiApp(App[str | None]):
         table.move_cursor(row=idx - 1)
 
     def action_move_down(self) -> None:
-        table = self.query_one("#commits", DataTable)
+        table = self.query_one("#commits", CommitTable)
         idx = table.cursor_row
         if idx >= len(self.commits) - 1:
             return
@@ -243,19 +272,12 @@ class GitTuiApp(App[str | None]):
             self.push_screen(CommitDetailScreen(c.sha, c.subject))
 
     def action_show_detail(self) -> None:
-        table = self.query_one("#commits", DataTable)
+        table = self.query_one("#commits", CommitTable)
         self._show_commit_detail(table.cursor_row)
 
-    def on_click(self, event: events.Click) -> None:
-        now = time.monotonic()
-        last_time, last_x, last_y = self._last_click
-        same_spot = abs(event.x - last_x) < 4 and abs(event.y - last_y) < 2
-        if same_spot and (now - last_time) < self._DOUBLE_CLICK_THRESHOLD:
-            table = self.query_one("#commits", DataTable)
-            self._show_commit_detail(table.cursor_row)
-            self._last_click = (0.0, -1, -1)
-        else:
-            self._last_click = (now, event.x, event.y)
+    @on(CommitTable.RowDoubleClicked)
+    def _on_double_click(self, event: CommitTable.RowDoubleClicked) -> None:
+        self._show_commit_detail(event.row)
 
     def action_squash(self) -> None:
         if self._order_changed:
