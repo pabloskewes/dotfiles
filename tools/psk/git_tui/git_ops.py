@@ -46,6 +46,18 @@ def get_commits(since_sha: str) -> list[Commit]:
     ]
 
 
+def get_commit_message(sha: str) -> tuple[str, str]:
+    """Return (subject, body) for a single commit."""
+    text = subprocess.run(
+        ["git", "log", "-1", "--format=%s%n---%n%b", sha],
+        capture_output=True, text=True, check=True,
+    ).stdout.strip()
+    parts = text.split("\n---\n", 1)
+    subject = parts[0].strip()
+    body = parts[1].strip() if len(parts) > 1 else ""
+    return subject, body
+
+
 def get_commit_detail(sha: str) -> str:
     """Return full commit message + file stats for *sha*."""
     header = subprocess.run(

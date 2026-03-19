@@ -291,11 +291,61 @@ def inspect(
 @squash_app.callback()
 def squash_default(
     base: str = typer.Option("main", "--base", "-b", help="Base branch to compare against"),
+    tui: bool = typer.Option(False, "--tui", help="Open the full interactive TUI"),
 ):
-    """Interactive TUI for squashing and reordering commits."""
-    from psk.git_tui import run_app
+    """Squash all branch commits into one."""
+    import subprocess as _sp
 
-    run_app(base)
+    from psk.git_tui.git_ops import (
+        do_squash,
+        get_commit_message,
+        get_commits,
+        get_current_branch,
+        get_merge_base,
+    )
+
+    if tui:
+        from psk.git_tui import run_app
+
+        run_app(base)
+        return
+
+    try:
+        branch = get_current_branch()
+        base_sha = get_merge_base(base)
+        commits = get_commits(base_sha)
+    except _sp.CalledProcessError as exc:
+        msg = exc.stderr.strip() if exc.stderr else str(exc)
+        typer.echo(f"❌ {msg}", err=True)
+        raise typer.Exit(1)
+
+    if not commits:
+        typer.echo(f"No commits between HEAD and {base}")
+        raise typer.Exit(0)
+
+    typer.echo(f"\n  {branch} — {len(commits)} commit(s) since {base}\n")
+    for c in reversed(commits):
+        typer.echo(f"  {c.short_sha}  {c.subject}")
+    typer.echo()
+
+    oldest = commits[-1]
+    title, body = get_commit_message(oldest.sha)
+
+    title = typer.prompt("Title", default=title)
+    body = typer.prompt("Description (optional)", default=body or "")
+
+    message = f"{title}\n\n{body}" if body else title
+
+    if not typer.confirm(f"\nSquash {len(commits)} commits?", default=True):
+        raise typer.Exit(0)
+
+    try:
+        do_squash(len(commits), message)
+    except Exception as exc:
+        typer.echo(f"❌ Squash failed: {exc}", err=True)
+        raise typer.Exit(1)
+
+    typer.echo(f"\n✓ Squashed {len(commits)} commits into: {title}")
 
 
 def main_worktree() -> None:
