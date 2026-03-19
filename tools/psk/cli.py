@@ -7,7 +7,7 @@ import questionary
 import typer
 
 from psk.db import reset_to_main
-from psk.pr_inspect import ALL_SECTIONS, DEFAULT_REPO, inspect_pr
+from psk.pr_inspect import ALL_SECTIONS, DEFAULT_REPO, _BOT_NAMES, inspect_pr
 from psk.scopeo import (
     BACKEND_REPO,
     FRONTEND_REPO,
@@ -273,11 +273,16 @@ def inspect(
         "--only",
         help=f"Sections to show (repeatable): {', '.join(sorted(ALL_SECTIONS))}. Default: all.",
     ),
+    no_bots: bool = typer.Option(
+        False,
+        "--no-bots",
+        help=f"Hide comments from known bots ({', '.join(sorted(_BOT_NAMES))}).",
+    ),
 ):
     """Print PR description, inline review comments, and filtered diff."""
     sections = set(only) if only else None
     try:
-        inspect_pr(pr_num, repo, sections)
+        inspect_pr(pr_num, repo, sections, no_bots=no_bots)
     except SystemExit as e:
         raise typer.Exit(int(e.code) if e.code is not None else 1)
 
