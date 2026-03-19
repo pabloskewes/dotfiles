@@ -7,6 +7,7 @@ import questionary
 import typer
 
 from psk.db import reset_to_main
+from psk.pr_inspect import DEFAULT_REPO, inspect_pr
 from psk.scopeo import (
     BACKEND_REPO,
     FRONTEND_REPO,
@@ -30,6 +31,7 @@ from psk.worktree import (
 
 worktree_app = typer.Typer(name="worktree", help="Manage git worktrees.")
 scopeo_app = typer.Typer(name="scopeo", help="Scopeo-specific helpers.")
+pr_inspect_app = typer.Typer(name="pr-inspect", help="Inspect a GitHub pull request.")
 
 
 @worktree_app.command()
@@ -262,9 +264,25 @@ def ticket_open(
             typer.echo(f"⚠️  cursor not found — open manually: cursor {workspace}", err=True)
 
 
+@pr_inspect_app.command()
+def inspect(
+    pr_num: str = typer.Argument(..., help="PR number"),
+    repo: str = typer.Option(DEFAULT_REPO, "--repo", "-R", help="GitHub repo (owner/name)"),
+):
+    """Print PR description, inline review comments, and filtered diff."""
+    try:
+        inspect_pr(pr_num, repo)
+    except SystemExit as e:
+        raise typer.Exit(int(e.code) if e.code is not None else 1)
+
+
 def main_worktree() -> None:
     worktree_app()
 
 
 def main_scopeo() -> None:
     scopeo_app()
+
+
+def main_pr_inspect() -> None:
+    pr_inspect_app()

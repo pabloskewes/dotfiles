@@ -8,6 +8,7 @@ dependencies = ["typer>=0.15.1", "questionary>=2.0"]
 [project.scripts]
 worktree = "psk.cli:main_worktree"
 scopeo = "psk.cli:main_scopeo"
+pr-inspect = "psk.cli:main_pr_inspect"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
