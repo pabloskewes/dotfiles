@@ -262,13 +262,8 @@ def ticket_open(
             typer.echo(f"⚠️  cursor not found — open manually: cursor {workspace}", err=True)
 
 
-app = typer.Typer(help="Personal automation tools.")
-app.add_typer(worktree_app)
-app.add_typer(scopeo_app)
-
-
-def main() -> None:
-    app()
+def main_worktree() -> None:
+    worktree_app()
 
 
 def main_scopeo() -> None:
