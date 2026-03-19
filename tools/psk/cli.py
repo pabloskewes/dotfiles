@@ -120,6 +120,60 @@ def list_cmd():
         typer.echo(f"{branch}  {sha}  {path}")
 
 
+@scopeo_app.command("qa")
+def qa_deploy(
+    target: str = typer.Option("staging", "--target", "-t", help="Target branch"),
+    no_squash: bool = typer.Option(False, "--no-squash", help="Skip squash step"),
+    push: bool = typer.Option(False, "--push", help="Push to remote after cherry-pick"),
+    dry_run: bool = typer.Option(
+        False, "--dry-run", help="Print plan without executing"
+    ),
+):
+    """Squash + cherry-pick current branch to staging."""
+    from psk.git_tui.git_ops import get_commit_message, get_commits, get_merge_base
+    from psk.qa import build_qa_plan, execute_qa
+
+    try:
+        plan = build_qa_plan(target, skip_squash=no_squash)
+    except ValueError as e:
+        typer.echo(f"❌ {e}", err=True)
+        raise typer.Exit(1)
+
+    typer.echo(f"\n  branch:    {plan.feature_branch}")
+    typer.echo(f"  target:    {plan.target_branch}")
+    typer.echo(f"  worktree:  {plan.staging_worktree}")
+    typer.echo(f"  commits:   {plan.commit_count}")
+    typer.echo(f"  squash:    {'yes' if plan.needs_squash else 'no'}")
+    typer.echo(f"  HEAD:      {plan.head_sha[:7]}\n")
+
+    if dry_run:
+        return
+
+    squash_message = None
+    if plan.needs_squash:
+        base_sha = get_merge_base("main")
+        commits = get_commits(base_sha)
+        oldest = commits[-1]
+        title, body = get_commit_message(oldest.sha)
+        title = typer.prompt("Squash title", default=title)
+        body = typer.prompt("Description (optional)", default=body or "")
+        squash_message = f"{title}\n\n{body}" if body else title
+
+    action = "cherry-pick + push" if push else "cherry-pick (local only)"
+    if not typer.confirm(f"Deploy to QA? [{action}]", default=True):
+        raise typer.Exit(0)
+
+    try:
+        sha = execute_qa(plan, squash_message, push=push)
+    except RuntimeError as e:
+        typer.echo(f"❌ {e}", err=True)
+        raise typer.Exit(1)
+
+    pushed = " + pushed" if push else " (local only — run with --push to push)"
+    typer.echo(f"\n✓ {sha[:7]} cherry-picked{pushed} → {plan.target_branch}")
+    typer.echo(f"  worktree: {plan.staging_worktree}")
+
+
 @scopeo_app.command("db-reset-to-main")
 def db_reset_to_main(
     upgrade: bool = typer.Option(
