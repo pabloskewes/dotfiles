@@ -104,32 +104,48 @@ def fetch_diff(pr_num: str, repo: str, env: dict[str, str]) -> int:
     return 0
 
 
-def inspect_pr(pr_num: str, repo: str = DEFAULT_REPO) -> None:
+ALL_SECTIONS = {"summary", "comments", "diff"}
+
+
+def inspect_pr(
+    pr_num: str,
+    repo: str = DEFAULT_REPO,
+    sections: set[str] | None = None,
+) -> None:
+    if sections is None:
+        sections = ALL_SECTIONS
+
+    unknown = sections - ALL_SECTIONS
+    if unknown:
+        print(f"❌ Unknown section(s): {', '.join(sorted(unknown))}. Valid: summary, comments, diff", file=sys.stderr)
+        raise SystemExit(1)
+
     env = _base_env()
 
     print(f"🔍 Searching PR #{pr_num} in the repo: {repo}...")
     print("---------------------------------------------------")
 
-    rc = fetch_pr_view(pr_num, repo, env)
-    if rc != 0:
-        raise SystemExit(rc)
+    if "summary" in sections:
+        rc = fetch_pr_view(pr_num, repo, env)
+        if rc != 0:
+            raise SystemExit(rc)
 
-    print()
-    print("=============================================")
-    print(f"🧵 INLINE REVIEW COMMENTS OF PR #{pr_num}")
-    print("=============================================")
-    print()
+    if "comments" in sections:
+        print()
+        print("=============================================")
+        print(f"🧵 INLINE REVIEW COMMENTS OF PR #{pr_num}")
+        print("=============================================")
+        print()
+        rc = fetch_inline_comments(pr_num, repo, env)
+        if rc != 0:
+            raise SystemExit(rc)
 
-    rc = fetch_inline_comments(pr_num, repo, env)
-    if rc != 0:
-        raise SystemExit(rc)
-
-    print()
-    print("=============================================")
-    print(f"📄 CODE (DIFF) OF PR #{pr_num}")
-    print("=============================================")
-    print()
-
-    rc = fetch_diff(pr_num, repo, env)
-    if rc != 0:
-        raise SystemExit(rc)
+    if "diff" in sections:
+        print()
+        print("=============================================")
+        print(f"📄 CODE (DIFF) OF PR #{pr_num}")
+        print("=============================================")
+        print()
+        rc = fetch_diff(pr_num, repo, env)
+        if rc != 0:
+            raise SystemExit(rc)

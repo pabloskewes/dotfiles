@@ -7,7 +7,7 @@ import questionary
 import typer
 
 from psk.db import reset_to_main
-from psk.pr_inspect import DEFAULT_REPO, inspect_pr
+from psk.pr_inspect import ALL_SECTIONS, DEFAULT_REPO, inspect_pr
 from psk.scopeo import (
     BACKEND_REPO,
     FRONTEND_REPO,
@@ -268,10 +268,16 @@ def ticket_open(
 def inspect(
     pr_num: str = typer.Argument(..., help="PR number"),
     repo: str = typer.Option(DEFAULT_REPO, "--repo", "-R", help="GitHub repo (owner/name)"),
+    only: Optional[list[str]] = typer.Option(
+        None,
+        "--only",
+        help=f"Sections to show (repeatable): {', '.join(sorted(ALL_SECTIONS))}. Default: all.",
+    ),
 ):
     """Print PR description, inline review comments, and filtered diff."""
+    sections = set(only) if only else None
     try:
-        inspect_pr(pr_num, repo)
+        inspect_pr(pr_num, repo, sections)
     except SystemExit as e:
         raise typer.Exit(int(e.code) if e.code is not None else 1)
 
