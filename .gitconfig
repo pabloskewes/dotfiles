@@ -24,6 +24,7 @@
             echo \"No upstream tracking branch; skipped remote updates.\"; \
         fi; \
     }; f"
+	rbmain = !git fetch origin main && git rebase origin/main
 [http]
 	postBuffer = 524288000
 [init]

@@ -151,7 +151,7 @@ def qa_deploy(
 
     squash_message = None
     if plan.needs_squash:
-        base_sha = get_merge_base("main")
+        base_sha = get_merge_base("origin/main")
         commits = get_commits(base_sha)
         oldest = commits[-1]
         title, body = get_commit_message(oldest.sha)
@@ -344,7 +344,7 @@ def inspect(
 
 @squash_app.callback()
 def squash_default(
-    base: str = typer.Option("main", "--base", "-b", help="Base branch to compare against"),
+    base: str = typer.Option("origin/main", "--base", "-b", help="Base branch to compare against"),
     tui: bool = typer.Option(False, "--tui", help="Open the full interactive TUI"),
 ):
     """Squash all branch commits into one."""

@@ -70,10 +70,11 @@ def build_qa_plan(target_branch: str = "staging", skip_squash: bool = False) -> 
             f"No worktree found for branch '{target_branch}'. Create one first."
         )
 
-    base_sha = get_merge_base("main")
+    subprocess.run(["git", "fetch", "origin", "main"], capture_output=True, check=True)
+    base_sha = get_merge_base("origin/main")
     commits = get_commits(base_sha)
     if not commits:
-        raise ValueError("No commits found between HEAD and main")
+        raise ValueError("No commits found between HEAD and origin/main")
 
     needs_squash = not skip_squash and len(commits) > 1
 

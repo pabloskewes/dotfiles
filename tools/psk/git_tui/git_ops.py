@@ -54,7 +54,8 @@ def get_commit_message(sha: str) -> tuple[str, str]:
     ).stdout.strip()
     parts = text.split("\n---\n", 1)
     subject = parts[0].strip()
-    body = parts[1].strip() if len(parts) > 1 else ""
+    raw_body = parts[1] if len(parts) > 1 else ""
+    body = "\n".join(l for l in raw_body.splitlines() if not l.startswith("#")).strip()
     return subject, body
 
 
