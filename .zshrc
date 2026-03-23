@@ -122,7 +122,8 @@ export COMPOSE_BAKE=true
 export PATH="$HOME/dotfiles/bin:$PATH"
 
 # Aliases
-alias force-pull='git reset --hard origin/$(git rev-parse --abbrev-ref HEAD) && git pull'
+[[ -f "$HOME/dotfiles/.bash_aliases" ]] && source "$HOME/dotfiles/.bash_aliases"
+
 alias lockin="$HOME/dotfiles/hammerspoon/lockin"
 
 # Added by Antigravity
@@ -136,3 +137,5 @@ export ANDROID_SDK_ROOT="/opt/homebrew/share/android-commandlinetools"
 export ANDROID_HOME="/opt/homebrew/share/android-commandlinetools"
 export PATH="$PATH:$ANDROID_SDK_ROOT/cmdline-tools/latest/bin"
 export PATH="$PATH:$ANDROID_SDK_ROOT/platform-tools"
+
+fpath+=~/.zfunc; autoload -Uz compinit; compinit
