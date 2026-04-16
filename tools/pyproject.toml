@@ -10,7 +10,7 @@ worktree = "psk.cli:main_worktree"
 scopeo = "psk.cli:main_scopeo"
 pr-inspect = "psk.cli:main_pr_inspect"
 squash = "psk.cli:main_squash"
-
+cursor-read = "psk.cli:main_cursor_read"
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 

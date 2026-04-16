@@ -13,13 +13,33 @@ uv tool install --reinstall .
 
 ### `scopeo`
 
-Scopeo-specific helpers.
+Scopeo-specific helpers for the `draftnrun` monorepo.
 
 | Command | Description |
 |---|---|
-| `scopeo ticket-init` | Initialize a new ticket (worktrees, journal folder, workspace file) |
-| `scopeo ticket-open` | Open an existing ticket's workspace |
+| `scopeo ticket-init` | Initialize a new ticket worktree, journal folder, and workspace file |
+| `scopeo ticket-open` | Open an existing ticket's monorepo worktree and workspace |
 | `scopeo db-reset-to-main` | Downgrade DB to main HEAD (see below) |
+
+#### `scopeo ticket-init`
+
+Creates one worktree under `~/Scopeo/draftnrun-worktrees/`, plus the journal folder and Cursor workspace under `~/Scopeo/scopeo-notes/journals/`.
+
+```bash
+# Preview the resolved branch/worktree/journal paths
+scopeo ticket-init DRA-1049 my-feature --dry-run
+
+# Create the worktree + journal + workspace
+scopeo ticket-init DRA-1049 my-feature --yes --open
+```
+
+#### `scopeo ticket-open`
+
+Opens one terminal at the ticket worktree root and, when present, opens the matching Cursor workspace.
+
+```bash
+scopeo ticket-open DRA-1049
+```
 
 #### `scopeo db-reset-to-main`
 

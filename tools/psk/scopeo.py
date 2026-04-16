@@ -10,8 +10,8 @@ from pathlib import Path
 from psk.worktree import create_worktree
 
 SCOPEO_ROOT = Path.home() / "Scopeo"
-BACKEND_REPO = "draftnrun"
-FRONTEND_REPO = "back-office"
+MONOREPO_REPO = "draftnrun"
+BACKEND_REPO = MONOREPO_REPO
 NOTES_REPO = "scopeo-notes"
 JOURNALS_DIR = "journals"
 
@@ -29,10 +29,8 @@ class InitPlan:
     ticket_id: str
     branch: str
     journal_folder: str
-    backend_repo: Path
-    backend_worktree: Path
-    frontend_repo: Path | None
-    frontend_worktree: Path | None
+    repo: Path
+    worktree: Path
     notes_repo: Path
     journal_dir: Path
     workspace_file: Path
@@ -87,27 +85,19 @@ def build_init_plan(
     ticket_or_url: str,
     slug: str,
     *,
-    with_frontend: bool = False,
     branch: str | None = None,
     journal_folder: str | None = None,
     workspace_file: str | None = None,
 ) -> InitPlan:
     parts = build_ticket_parts(ticket_or_url, slug)
     scopeo_root = SCOPEO_ROOT
-    backend_repo = resolve_repo(scopeo_root, BACKEND_REPO)
-    frontend_repo = resolve_repo(scopeo_root, FRONTEND_REPO) if with_frontend else None
+    repo = resolve_repo(scopeo_root, MONOREPO_REPO)
     notes_repo = resolve_repo(scopeo_root, NOTES_REPO)
 
     resolved_branch = branch or build_branch_name(parts)
     resolved_journal_folder = journal_folder or build_journal_folder(parts)
     journal_dir = notes_repo / JOURNALS_DIR / resolved_journal_folder
-
-    backend_worktree = resolve_worktree_path_for_repo(backend_repo, resolved_branch)
-    frontend_worktree = (
-        resolve_worktree_path_for_repo(frontend_repo, resolved_branch)
-        if frontend_repo
-        else None
-    )
+    worktree = resolve_worktree_path_for_repo(repo, resolved_branch)
     resolved_workspace_file = (
         Path(workspace_file)
         if workspace_file
@@ -118,10 +108,8 @@ def build_init_plan(
         ticket_id=parts.ticket_id,
         branch=resolved_branch,
         journal_folder=resolved_journal_folder,
-        backend_repo=backend_repo,
-        backend_worktree=backend_worktree,
-        frontend_repo=frontend_repo,
-        frontend_worktree=frontend_worktree,
+        repo=repo,
+        worktree=worktree,
         notes_repo=notes_repo,
         journal_dir=journal_dir,
         workspace_file=resolved_workspace_file,
@@ -132,13 +120,8 @@ def render_summary(plan: InitPlan) -> str:
     rows = [
         ("ticket_id", plan.ticket_id),
         ("branch", plan.branch),
-        ("backend_repo", str(plan.backend_repo)),
-        ("backend_worktree", str(plan.backend_worktree)),
-        ("frontend_repo", str(plan.frontend_repo) if plan.frontend_repo else "-"),
-        (
-            "frontend_worktree",
-            str(plan.frontend_worktree) if plan.frontend_worktree else "-",
-        ),
+        ("repo", str(plan.repo)),
+        ("worktree", str(plan.worktree)),
         ("journal_folder", plan.journal_folder),
         ("workspace_file", str(plan.workspace_file)),
     ]
@@ -159,44 +142,25 @@ def _build_readme_content(plan: InitPlan) -> str:
         f"started: {started}",
         'status: "active"',
         "repos:",
-        f'  - repo: "Scopeo/{plan.backend_repo.name}"',
+        f'  - repo: "Scopeo/{plan.repo.name}"',
         "    branches:",
         f"      - {plan.branch}",
+        "prs: []",
+        "tags: []",
+        f"updated: {started}",
+        "---",
+        "",
+        f"# {plan.ticket_id} — {plan.journal_folder}",
+        "",
     ]
-    if plan.frontend_repo:
-        lines.extend(
-            [
-                f'  - repo: "Scopeo/{plan.frontend_repo.name}"',
-                "    branches:",
-                f"      - {plan.branch}",
-            ]
-        )
-    lines.extend(
-        [
-            "prs: []",
-            "tags: []",
-            f"updated: {started}",
-            "---",
-            "",
-            f"# {plan.ticket_id} — {plan.journal_folder}",
-            "",
-        ]
-    )
     return "\n".join(lines)
 
 
 def _build_workspace_payload(plan: InitPlan) -> dict:
     folders = [
-        {"path": str(plan.backend_worktree), "name": f"⚙️ {plan.backend_repo.name}"}
+        {"path": str(plan.worktree), "name": f"⚙️ {plan.repo.name}"},
+        {"path": str(plan.notes_repo), "name": "📓 scopeo-notes"},
     ]
-    if plan.frontend_worktree and plan.frontend_repo:
-        folders.append(
-            {
-                "path": str(plan.frontend_worktree),
-                "name": f"🖥️ {plan.frontend_repo.name}",
-            }
-        )
-    folders.append({"path": str(plan.notes_repo), "name": "📓 scopeo-notes"})
     return {
         "folders": folders,
         "settings": {
@@ -219,51 +183,47 @@ def _write_text_if_missing(path: Path, content: str) -> None:
 class ActiveTicket:
     ticket_id: str
     slug: str
-    has_frontend: bool
 
 
-def list_active_tickets(backend_repo: Path, frontend_repo: Path) -> list[ActiveTicket]:
-    def _worktree_names(repo: Path) -> set[str]:
-        result = subprocess.run(
-            ["git", "worktree", "list", "--porcelain"],
-            capture_output=True,
-            text=True,
-            cwd=repo,
-        )
-        return {
-            Path(line[len("worktree ") :]).name
-            for line in result.stdout.splitlines()
-            if line.startswith("worktree ")
-        }
-
-    backend_names = _worktree_names(backend_repo)
-    frontend_names = _worktree_names(frontend_repo)
+def list_active_tickets(repo: Path) -> list[ActiveTicket]:
+    result = subprocess.run(
+        ["git", "worktree", "list", "--porcelain"],
+        capture_output=True,
+        text=True,
+        cwd=repo,
+    )
+    names = {
+        Path(line[len("worktree ") :]).name
+        for line in result.stdout.splitlines()
+        if line.startswith("worktree ")
+    }
 
     tickets = []
-    for name in backend_names:
+    for name in names:
         match = re.search(r"-([a-z]+)-(\d+)-(.+)", name)
         if not match:
             continue
         ticket_id = f"{match.group(1).upper()}-{match.group(2)}"
-        slug = match.group(3)
-        has_frontend = name in frontend_names
-        tickets.append(
-            ActiveTicket(ticket_id=ticket_id, slug=slug, has_frontend=has_frontend)
-        )
+        tickets.append(ActiveTicket(ticket_id=ticket_id, slug=match.group(3)))
 
-    tickets.sort(key=lambda t: t.ticket_id)
+    tickets.sort(key=lambda ticket: ticket.ticket_id)
     return tickets
 
 
-def find_workspace_for_ticket(backend_worktree: Path, notes_repo: Path) -> Path | None:
-    """Derive the .code-workspace path from a backend worktree path, if it exists."""
-    match = re.search(r"-([a-z]+)-(\d+)-(.+)", backend_worktree.name)
+def find_workspace_for_ticket(worktree_path: Path, notes_repo: Path) -> Path | None:
+    """Derive the .code-workspace path from a ticket worktree path, if it exists."""
+    match = re.search(r"-([a-z]+)-(\d+)-(.+)", worktree_path.name)
     if not match:
         return None
     number = int(match.group(2))
     slug = match.group(3)
     journal_folder = f"{number:04d}-{slug}"
-    workspace = notes_repo / JOURNALS_DIR / journal_folder / f"{journal_folder}.code-workspace"
+    workspace = (
+        notes_repo
+        / JOURNALS_DIR
+        / journal_folder
+        / f"{journal_folder}.code-workspace"
+    )
     return workspace if workspace.exists() else None
 
 
@@ -301,27 +261,14 @@ def _run_setup(worktree: Path, cmd: list[str]) -> None:
 
 
 def init_scopeo_ticket(plan: InitPlan) -> None:
-    if not plan.backend_worktree.exists():
-        with chdir(plan.backend_repo):
+    if not plan.worktree.exists():
+        with chdir(plan.repo):
             create_worktree(
                 plan.branch,
-                plan.backend_worktree,
-                new_branch=not _branch_exists(plan.backend_repo, plan.branch),
+                plan.worktree,
+                new_branch=not _branch_exists(plan.repo, plan.branch),
             )
-        _run_setup(plan.backend_worktree, ["uv", "sync"])
-
-    if (
-        plan.frontend_repo
-        and plan.frontend_worktree
-        and not plan.frontend_worktree.exists()
-    ):
-        with chdir(plan.frontend_repo):
-            create_worktree(
-                plan.branch,
-                plan.frontend_worktree,
-                new_branch=not _branch_exists(plan.frontend_repo, plan.branch),
-            )
-        _run_setup(plan.frontend_worktree, ["npm", "install"])
+        _run_setup(plan.worktree, ["uv", "sync"])
 
     plan.journal_dir.mkdir(parents=True, exist_ok=True)
     _ensure_parent_dirs(

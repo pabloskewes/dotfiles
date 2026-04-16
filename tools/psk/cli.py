@@ -3,19 +3,27 @@ import subprocess
 from pathlib import Path
 from typing import Optional
 
+import click
 import questionary
 import typer
 
+from psk.cursor import infer_cursor_project, list_transcripts, render_tail
 from psk.db import reset_to_main
-from psk.pr_inspect import ALL_SECTIONS, DEFAULT_REPO, _BOT_NAMES, inspect_pr
+from psk.pr_inspect import (
+    _BOT_NAMES,
+    ALL_SECTIONS,
+    DEFAULT_REPO,
+    inspect_pr,
+    list_coderabbit_threads,
+    resolve_coderabbit_threads,
+)
 from psk.scopeo import (
-    BACKEND_REPO,
-    FRONTEND_REPO,
+    MONOREPO_REPO,
     NOTES_REPO,
     SCOPEO_ROOT,
     build_init_plan,
-    find_worktree_for_ticket,
     find_workspace_for_ticket,
+    find_worktree_for_ticket,
     init_scopeo_ticket,
     list_active_tickets,
     parse_ticket,
@@ -31,8 +39,13 @@ from psk.worktree import (
 
 worktree_app = typer.Typer(name="worktree", help="Manage git worktrees.")
 scopeo_app = typer.Typer(name="scopeo", help="Scopeo-specific helpers.")
-pr_inspect_app = typer.Typer(name="pr-inspect", help="Inspect a GitHub pull request.")
+pr_inspect_app = typer.Typer(
+    name="pr-inspect",
+    help="Inspect a GitHub pull request.",
+    invoke_without_command=True,
+)
 squash_app = typer.Typer(name="squash", invoke_without_command=True)
+cursor_app = typer.Typer(name="cursor-read", help="Inspect Cursor conversation transcripts.")
 
 
 @worktree_app.command()
@@ -177,7 +190,9 @@ def qa_deploy(
 @scopeo_app.command("db-reset-to-main")
 def db_reset_to_main(
     upgrade: bool = typer.Option(
-        False, "--upgrade", help="Also run 'alembic upgrade head' from cwd after resetting"
+        False,
+        "--upgrade",
+        help="Also run 'alembic upgrade head' from cwd after resetting",
     ),
     dry_run: bool = typer.Option(
         False, "--dry-run", help="Show what would happen without touching the DB"
@@ -200,9 +215,6 @@ def ticket_init(
     ticket: str = typer.Argument(..., help="Linear ticket id or URL (e.g. DRA-1049)"),
     slug: Optional[str] = typer.Argument(
         None, help="Slug for branch and journal folder"
-    ),
-    with_frontend: bool = typer.Option(
-        False, "--frontend", help="Also create a frontend worktree"
     ),
     branch: Optional[str] = typer.Option(None, help="Override branch name"),
     journal_folder: Optional[str] = typer.Option(None, help="Override journal folder"),
@@ -227,14 +239,10 @@ def ticket_init(
             raise typer.Exit(1)
         slug = typer.prompt("Slug")
 
-    if interactive and not with_frontend:
-        with_frontend = typer.confirm("Include frontend?", default=False)
-
     try:
         plan = build_init_plan(
             ticket,
             slug,
-            with_frontend=with_frontend,
             branch=branch,
             journal_folder=journal_folder,
             workspace_file=workspace_file,
@@ -273,8 +281,11 @@ def ticket_open(
         None, help="Linear ticket id or URL (e.g. DRA-996)"
     ),
 ):
+    repo = SCOPEO_ROOT / MONOREPO_REPO
+    notes_repo = SCOPEO_ROOT / NOTES_REPO
+
     if ticket is None:
-        active = list_active_tickets(SCOPEO_ROOT / BACKEND_REPO, SCOPEO_ROOT / FRONTEND_REPO)
+        active = list_active_tickets(repo)
         if not active:
             typer.echo("no active worktrees found", err=True)
             raise typer.Exit(1)
@@ -296,33 +307,29 @@ def ticket_open(
         raise typer.Exit(1)
 
     ticket_id = f"{project}-{number}"
-    backend_repo = SCOPEO_ROOT / BACKEND_REPO
-    frontend_repo = SCOPEO_ROOT / FRONTEND_REPO
-    notes_repo = SCOPEO_ROOT / NOTES_REPO
+    worktree_path = find_worktree_for_ticket(repo, ticket_id) or repo
 
-    backend_path = find_worktree_for_ticket(backend_repo, ticket_id) or backend_repo
-    frontend_path = find_worktree_for_ticket(frontend_repo, ticket_id) or frontend_repo
+    typer.echo(f"opening worktree: {worktree_path}")
+    subprocess.run(["open", "-a", "Terminal", str(worktree_path)])
 
-    typer.echo(f"opening backend: {backend_path}")
-    subprocess.run(["open", "-a", "Terminal", str(backend_path)])
-
-    typer.echo(f"opening frontend: {frontend_path}")
-    subprocess.run(["open", "-a", "Terminal", str(frontend_path)])
-
-    workspace = find_workspace_for_ticket(backend_path, notes_repo)
+    workspace = find_workspace_for_ticket(worktree_path, notes_repo)
     if workspace:
         cursor_bin = shutil.which("cursor")
         if cursor_bin:
             typer.echo(f"opening workspace: {workspace}")
             subprocess.run([cursor_bin, str(workspace)])
         else:
-            typer.echo(f"⚠️  cursor not found — open manually: cursor {workspace}", err=True)
+            typer.echo(
+                f"⚠️  cursor not found — open manually: cursor {workspace}", err=True
+            )
 
 
-@pr_inspect_app.command()
+@pr_inspect_app.callback()
 def inspect(
     pr_num: str = typer.Argument(..., help="PR number"),
-    repo: str = typer.Option(DEFAULT_REPO, "--repo", "-R", help="GitHub repo (owner/name)"),
+    repo: str = typer.Option(
+        DEFAULT_REPO, "--repo", "-R", help="GitHub repo (owner/name)"
+    ),
     only: Optional[list[str]] = typer.Option(
         None,
         "--only",
@@ -342,64 +349,157 @@ def inspect(
         raise typer.Exit(int(e.code) if e.code is not None else 1)
 
 
+@pr_inspect_app.command("resolve-coderabbit")
+def resolve_coderabbit(
+    pr_num: str = typer.Argument(..., help="PR number"),
+    repo: str = typer.Option(
+        DEFAULT_REPO, "--repo", "-R", help="GitHub repo (owner/name)"
+    ),
+    list_only: bool = typer.Option(
+        False, "--list", help="List open threads without resolving"
+    ),
+    resolve: Optional[str] = typer.Option(
+        None, "--resolve", help="Comma-separated indices to resolve (e.g. 1,3)"
+    ),
+    all_threads: bool = typer.Option(
+        False, "--all", help="Resolve all open CodeRabbit threads"
+    ),
+):
+    try:
+        if list_only:
+            list_coderabbit_threads(pr_num, repo)
+        else:
+            resolve_coderabbit_threads(pr_num, repo, resolve, all_threads)
+    except RuntimeError as e:
+        typer.echo(f"❌ {e}", err=True)
+        raise typer.Exit(1)
+
+
 @squash_app.callback()
 def squash_default(
-    base: str = typer.Option("origin/main", "--base", "-b", help="Base branch to compare against"),
-    tui: bool = typer.Option(False, "--tui", help="Open the full interactive TUI"),
+    ctx: typer.Context,
+    pr_num: Optional[str] = typer.Argument(None, help="PR number"),
 ):
-    """Squash all branch commits into one."""
-    import subprocess as _sp
+    if ctx.invoked_subcommand is not None or pr_num is None:
+        return
+    from psk.git_tui.tui import run
 
-    from psk.git_tui.git_ops import (
-        do_squash,
-        get_commit_message,
-        get_commits,
-        get_current_branch,
-        get_merge_base,
-    )
+    run(pr_num)
 
-    if tui:
-        from psk.git_tui import run_app
 
-        run_app(base)
+@cursor_app.command("list")
+def cursor_list(
+    path: Optional[str] = typer.Option(
+        None, "--path", "-p", help="Folder or workspace file (default: CWD)"
+    ),
+    limit: int = typer.Option(20, "--limit", "-n", help="Max transcripts to show"),
+):
+    """List recent conversation transcripts for the inferred Cursor project."""
+
+    project = infer_cursor_project(Path(path) if path else None)
+    if not project:
+        typer.echo("❌ Could not find Cursor project.", err=True)
+        raise typer.Exit(1)
+
+    transcripts = list_transcripts(project, n=limit)
+    if not transcripts:
+        typer.echo("No transcripts found.")
         return
 
-    try:
-        branch = get_current_branch()
-        base_sha = get_merge_base(base)
-        commits = get_commits(base_sha)
-    except _sp.CalledProcessError as exc:
-        msg = exc.stderr.strip() if exc.stderr else str(exc)
-        typer.echo(f"❌ {msg}", err=True)
+    for t in transcripts:
+        preview = t.first_user_message.replace("\n", " ")
+        typer.echo(
+            f"{t.short_uuid}  {t.timestamp}  users={t.user_turn_count:<2}  {preview}"
+        )
+
+
+@cursor_app.command("show")
+def cursor_show(
+    uuid_prefix: str = typer.Argument(..., help="UUID or prefix shown by list"),
+    path: Optional[str] = typer.Option(
+        None, "--path", "-p", help="Folder or workspace file (default: CWD)"
+    ),
+    turns: int = typer.Option(40, "--turns", "-t", help="Number of turns to show"),
+    chars: int = typer.Option(12000, "--chars", "-c", help="Max characters"),
+):
+    """Show one transcript by UUID prefix."""
+
+    project = infer_cursor_project(Path(path) if path else None)
+    if not project:
+        typer.echo("❌ Could not find Cursor project.", err=True)
         raise typer.Exit(1)
 
-    if not commits:
-        typer.echo(f"No commits between HEAD and {base}")
-        raise typer.Exit(0)
-
-    typer.echo(f"\n  {branch} — {len(commits)} commit(s) since {base}\n")
-    for c in reversed(commits):
-        typer.echo(f"  {c.short_sha}  {c.subject}")
-    typer.echo()
-
-    oldest = commits[-1]
-    title, body = get_commit_message(oldest.sha)
-
-    title = typer.prompt("Title", default=title)
-    body = typer.prompt("Description (optional)", default=body or "")
-
-    message = f"{title}\n\n{body}" if body else title
-
-    if not typer.confirm(f"\nSquash {len(commits)} commits?", default=True):
-        raise typer.Exit(0)
-
-    try:
-        do_squash(len(commits), message)
-    except Exception as exc:
-        typer.echo(f"❌ Squash failed: {exc}", err=True)
+    transcripts = list_transcripts(project, n=200)
+    matches = [t for t in transcripts if t.uuid.startswith(uuid_prefix)]
+    if not matches:
+        typer.echo(f"❌ No transcript found with prefix '{uuid_prefix}'", err=True)
+        raise typer.Exit(1)
+    if len(matches) > 1:
+        typer.echo("Ambiguous prefix. Matches:", err=True)
+        for t in matches:
+            typer.echo(f"  {t.short_uuid}  {t.timestamp}  {t.first_user_message}")
         raise typer.Exit(1)
 
-    typer.echo(f"\n✓ Squashed {len(commits)} commits into: {title}")
+    typer.echo(render_tail(matches[0].jsonl_path, turns=turns, chars=chars))
+
+
+@cursor_app.command("tail")
+def cursor_tail(
+    uuid_prefix: Optional[str] = typer.Argument(
+        None, help="UUID prefix (default: most recent)"
+    ),
+    path: Optional[str] = typer.Option(
+        None, "--path", "-p", help="Folder or workspace file (default: CWD)"
+    ),
+    turns: int = typer.Option(10, "--turns", "-t", help="Number of turns to show"),
+    chars: int = typer.Option(4000, "--chars", "-c", help="Max characters"),
+):
+    """Show the tail of a conversation transcript."""
+    from psk.cursor import infer_cursor_project, list_transcripts, render_tail
+
+    project = infer_cursor_project(Path(path) if path else None)
+    if not project:
+        typer.echo("❌ Could not find Cursor project.", err=True)
+        raise typer.Exit(1)
+
+    transcripts = list_transcripts(project, n=200)
+    if not transcripts:
+        typer.echo("No transcripts found.", err=True)
+        raise typer.Exit(1)
+
+    if uuid_prefix:
+        matches = [t for t in transcripts if t.uuid.startswith(uuid_prefix)]
+        if not matches:
+            typer.echo(f"❌ No transcript found with prefix '{uuid_prefix}'", err=True)
+            raise typer.Exit(1)
+        selected = matches[0]
+    else:
+        selected = transcripts[0]
+
+    typer.echo(render_tail(selected.jsonl_path, turns=turns, chars=chars))
+
+
+@cursor_app.command("latest")
+def cursor_latest(
+    path: Optional[str] = typer.Option(
+        None, "--path", "-p", help="Folder or workspace file (default: CWD)"
+    ),
+    turns: int = typer.Option(10, "--turns", "-t", help="Number of turns to show"),
+    chars: int = typer.Option(4000, "--chars", "-c", help="Max characters"),
+):
+    """Show the tail of the most recent transcript (shorthand for tail without UUID)."""
+
+    project = infer_cursor_project(Path(path) if path else None)
+    if not project:
+        typer.echo("❌ Could not find Cursor project.", err=True)
+        raise typer.Exit(1)
+
+    transcripts = list_transcripts(project, n=1)
+    if not transcripts:
+        typer.echo("No transcripts found.", err=True)
+        raise typer.Exit(1)
+
+    typer.echo(render_tail(transcripts[0].jsonl_path, turns=turns, chars=chars))
 
 
 def main_worktree() -> None:
@@ -416,3 +516,7 @@ def main_pr_inspect() -> None:
 
 def main_squash() -> None:
     squash_app()
+
+
+def main_cursor_read() -> None:
+    cursor_app()
