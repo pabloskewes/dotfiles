@@ -110,6 +110,8 @@
   // ===================================================================
   // CURSOR SETTINGS
   // ===================================================================
+  "cursor.terminal.autoExecute": true,
+  "cursor.composer.autoExecuteCommands": true,
   "cursor.composer.shouldChimeAfterChatFinishes": true,
   "cursor.cpp.enablePartialAccepts": true,
   "cursor.general.globalCursorIgnoreList": [
