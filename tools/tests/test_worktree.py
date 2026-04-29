@@ -3,6 +3,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 from psk.worktree import (
+    FRONTEND_DIRNAME,
     create_worktree,
     get_repo_root,
     list_worktrees,
@@ -228,6 +229,26 @@ class TestCreateWorktree:
         assert (worktree_path / ".env").is_symlink()
         assert not (worktree_path / ".env.local").exists()
         assert not (worktree_path / ".env.development.local").exists()
+
+    def test_symlinks_frontend_env_files_when_frontend_dir_exists(self, tmp_path):
+        repo_root = tmp_path / "repo"
+        frontend_src = repo_root / FRONTEND_DIRNAME
+        frontend_src.mkdir(parents=True)
+        worktree_path = tmp_path / "worktree"
+        (worktree_path / FRONTEND_DIRNAME).mkdir(parents=True)
+
+        (frontend_src / ".env").write_text("VITE_SCOPEO_API_URL=http://localhost:8000")
+
+        with (
+            patch("subprocess.run") as mock_run,
+            patch("psk.worktree.get_repo_root", return_value=repo_root),
+        ):
+            mock_run.return_value = MagicMock(returncode=0)
+            create_worktree("main", worktree_path)
+
+        frontend_env = worktree_path / FRONTEND_DIRNAME / ".env"
+        assert frontend_env.is_symlink()
+        assert frontend_env.resolve() == (frontend_src / ".env").resolve()
 
     def test_skips_symlink_when_dst_already_exists(self, tmp_path):
         repo_root = tmp_path / "repo"

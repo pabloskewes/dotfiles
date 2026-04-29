@@ -133,58 +133,66 @@ def list_cmd():
         typer.echo(f"{branch}  {sha}  {path}")
 
 
-@scopeo_app.command("qa")
-def qa_deploy(
+@scopeo_app.command("staging")
+def staging_deploy(
     target: str = typer.Option("staging", "--target", "-t", help="Target branch"),
-    no_squash: bool = typer.Option(False, "--no-squash", help="Skip squash step"),
-    push: bool = typer.Option(False, "--push", help="Push to remote after cherry-pick"),
+    message: Optional[str] = typer.Option(
+        None, "--message", "-m", help="Commit message (non-interactive)"
+    ),
+    push: bool = typer.Option(False, "--push", help="Push to origin after commit"),
     dry_run: bool = typer.Option(
         False, "--dry-run", help="Print plan without executing"
     ),
+    yes: bool = typer.Option(False, "--yes", "-y", help="Skip confirmation prompt"),
 ):
-    """Squash + cherry-pick current branch to staging."""
-    from psk.git_tui.git_ops import get_commit_message, get_commits, get_merge_base
-    from psk.qa import build_qa_plan, execute_qa
+    """Apply the feature branch delta on top of origin/<target> as a single commit.
+
+    Never rewrites the feature branch history. Never force-pushes.
+    """
+    from psk.staging import PROTECTED_TARGETS, build_staging_plan, execute_staging
 
     try:
-        plan = build_qa_plan(target, skip_squash=no_squash)
+        plan = build_staging_plan(target)
     except ValueError as e:
         typer.echo(f"❌ {e}", err=True)
         raise typer.Exit(1)
 
-    typer.echo(f"\n  branch:    {plan.feature_branch}")
-    typer.echo(f"  target:    {plan.target_branch}")
-    typer.echo(f"  worktree:  {plan.staging_worktree}")
-    typer.echo(f"  commits:   {plan.commit_count}")
-    typer.echo(f"  squash:    {'yes' if plan.needs_squash else 'no'}")
-    typer.echo(f"  HEAD:      {plan.head_sha[:7]}\n")
+    typer.echo(f"\n  feature:   {plan.feature_branch}")
+    typer.echo(f"  target:    {plan.target_branch} @ {plan.target_remote_sha[:7]}")
+    typer.echo(f"  HEAD:      {plan.feature_head_sha[:7]}")
+    typer.echo(f"  worktree:  {plan.target_worktree}")
+    typer.echo(f"  files:     {len(plan.changed_files)}")
+    typer.echo(f"\n{plan.diff_stat}\n")
+    if plan.commit_subjects:
+        typer.echo(f"  Commits in feature ({len(plan.commit_subjects)}):")
+        for subject in plan.commit_subjects:
+            typer.echo(f"    • {subject}")
+        typer.echo("")
 
     if dry_run:
         return
 
-    squash_message = None
-    if plan.needs_squash:
-        base_sha = get_merge_base("origin/main")
-        commits = get_commits(base_sha)
-        oldest = commits[-1]
-        title, body = get_commit_message(oldest.sha)
-        title = typer.prompt("Squash title", default=title)
-        body = typer.prompt("Description (optional)", default=body or "")
-        squash_message = f"{title}\n\n{body}" if body else title
+    if message is None:
+        default = plan.commit_subjects[0] if plan.commit_subjects else ""
+        title = typer.prompt("Commit title", default=default)
+        body = typer.prompt("Description (optional)", default="")
+        message = f"{title}\n\n{body}" if body else title
 
-    action = "cherry-pick + push" if push else "cherry-pick (local only)"
-    if not typer.confirm(f"Deploy to QA? [{action}]", default=True):
+    action = "apply + commit" + (" + push" if push else " (local only)")
+    if target in PROTECTED_TARGETS:
+        typer.echo(f"⚠️  Target '{target}' is a protected branch.")
+    if not yes and not typer.confirm(f"Deploy to {target}? [{action}]", default=True):
         raise typer.Exit(0)
 
     try:
-        sha = execute_qa(plan, squash_message, push=push)
+        sha = execute_staging(plan, message, push=push)
     except RuntimeError as e:
         typer.echo(f"❌ {e}", err=True)
         raise typer.Exit(1)
 
     pushed = " + pushed" if push else " (local only — run with --push to push)"
-    typer.echo(f"\n✓ {sha[:7]} cherry-picked{pushed} → {plan.target_branch}")
-    typer.echo(f"  worktree: {plan.staging_worktree}")
+    typer.echo(f"\n✓ {sha[:7]} committed{pushed} → {plan.target_branch}")
+    typer.echo(f"  worktree: {plan.target_worktree}")
 
 
 @scopeo_app.command("db-reset-to-main")

@@ -138,6 +138,9 @@
   // ===================================================================
   "excalidraw.theme": "dark",
   "markdown.extension.toc.updateOnSave": false,
+  "markdown.editor.filePaste.copyIntoWorkspace": "never",
+  "markdown.editor.drop.copyIntoWorkspace": "never",
+  "markdown.editor.paste.copyIntoWorkspace": "never",
   "tinymist.formatterMode": "typstyle",
   "prettier.disableLanguages": ["dockerfile"],
   "pylint.args": [
@@ -182,4 +185,5 @@
     "editor.tabCompletion": "onlySnippets",
     "editor.wordBasedSuggestions": "off",
   },
+  "workbench.sideBar.location": "right",
 }

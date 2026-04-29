@@ -1,7 +1,7 @@
 import json
 from contextlib import contextmanager
 from pathlib import Path
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock, call, patch
 
 import pytest
 from typer.testing import CliRunner
@@ -12,6 +12,7 @@ from psk.scopeo import (
     TicketParts,
     _build_readme_content,
     _build_workspace_payload,
+    _prepare_frontend_env,
     _write_text_if_missing,
     build_branch_name,
     build_init_plan,
@@ -26,6 +27,7 @@ from psk.scopeo import (
     resolve_worktree_path_for_repo,
     slugify,
 )
+from psk.staging import StagingPlan
 
 
 class TestParseTicket:
@@ -353,6 +355,63 @@ class TestInitScopeoTicket:
 
         mock_setup.assert_called_once_with(plan.worktree, ["uv", "sync"])
 
+    def test_calls_pnpm_install_for_frontend_when_node_modules_missing(self, tmp_path):
+        plan = self._make_plan(tmp_path)
+
+        def _create_worktree_side_effect(*_args, **_kwargs):
+            frontend_dir = plan.worktree / "frontend"
+            frontend_dir.mkdir(parents=True)
+            (frontend_dir / "package.json").write_text("{}")
+
+        with (
+            patch("psk.scopeo.create_worktree", side_effect=_create_worktree_side_effect),
+            patch("psk.scopeo._branch_exists", return_value=False),
+            patch("psk.scopeo._run_setup") as mock_setup,
+            patch("psk.scopeo.chdir", side_effect=_noop_chdir),
+        ):
+            init_scopeo_ticket(plan)
+
+        assert mock_setup.call_args_list == [
+            call(plan.worktree, ["uv", "sync"]),
+            call(plan.worktree / "frontend", ["pnpm", "install"]),
+        ]
+
+    def test_skips_pnpm_install_when_frontend_node_modules_exists(self, tmp_path):
+        plan = self._make_plan(tmp_path)
+        frontend_dir = plan.worktree / "frontend"
+        frontend_dir.mkdir(parents=True)
+        (frontend_dir / "package.json").write_text("{}")
+        (frontend_dir / "node_modules").mkdir()
+
+        with (
+            patch("psk.scopeo.create_worktree") as mock_create,
+            patch("psk.scopeo._branch_exists", return_value=False),
+            patch("psk.scopeo._run_setup") as mock_setup,
+            patch("psk.scopeo.chdir", side_effect=_noop_chdir),
+        ):
+            init_scopeo_ticket(plan)
+
+        mock_create.assert_not_called()
+        mock_setup.assert_not_called()
+
+    def test_prepare_frontend_env_falls_back_to_legacy_back_office_repo(self, tmp_path):
+        repo = tmp_path / "draftnrun"
+        (repo / "frontend").mkdir(parents=True)
+        worktree = tmp_path / "draftnrun-worktrees" / "pablo-dra-1049-feat"
+        frontend_dir = worktree / "frontend"
+        frontend_dir.mkdir(parents=True)
+
+        legacy_repo = tmp_path / "back-office"
+        legacy_repo.mkdir()
+        (legacy_repo / ".env").write_text("VITE_SCOPEO_API_URL=http://localhost:8000")
+
+        with patch("psk.scopeo.SCOPEO_ROOT", tmp_path):
+            _prepare_frontend_env(repo, worktree)
+
+        frontend_env = frontend_dir / ".env"
+        assert frontend_env.is_symlink()
+        assert frontend_env.resolve() == (legacy_repo / ".env").resolve()
+
     def test_skips_worktree_creation_when_exists(self, tmp_path):
         plan = self._make_plan(tmp_path)
         plan.worktree.mkdir(parents=True)
@@ -408,3 +467,37 @@ class TestScopeoCli:
             ["open", "-a", "Terminal", str(worktree)],
             ["/usr/local/bin/cursor", str(workspace)],
         ]
+
+    def test_staging_help_shows_push_flag(self):
+        result = self.runner.invoke(scopeo_app, ["staging", "--help"])
+
+        assert result.exit_code == 0
+        assert "--push" in result.output
+        assert "--no-push" not in result.output
+
+    def test_staging_defaults_to_local_only(self):
+        plan = StagingPlan(
+            feature_branch="pablo/dra-1049-my-feature",
+            target_branch="staging",
+            target_worktree=Path("/Scopeo/draftnrun-worktrees/staging"),
+            feature_head_sha="abcdef123456",
+            patch_base_sha="1111111",
+            source_base_sha="2222222",
+            target_remote_sha="1234567890abcdef",
+            diff_stat=" file.txt | 1 +\n 1 file changed, 1 insertion(+)",
+            changed_files=["file.txt"],
+            commit_subjects=["bugfix"],
+        )
+
+        with (
+            patch("psk.staging.build_staging_plan", return_value=plan),
+            patch("psk.staging.execute_staging", return_value="fedcba987654"),
+        ):
+            result = self.runner.invoke(
+                scopeo_app,
+                ["staging", "--message", "deploy", "--yes"],
+            )
+
+        assert result.exit_code == 0
+        assert "(local only" in result.output
+        assert "run with --push to push" in result.output

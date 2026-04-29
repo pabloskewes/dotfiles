@@ -7,13 +7,16 @@ from dataclasses import dataclass
 from datetime import date
 from pathlib import Path
 
-from psk.worktree import create_worktree
+from psk.worktree import ENV_FILES, FRONTEND_DIRNAME, create_worktree, symlink_env_files
 
 SCOPEO_ROOT = Path.home() / "Scopeo"
 MONOREPO_REPO = "draftnrun"
 BACKEND_REPO = MONOREPO_REPO
 NOTES_REPO = "scopeo-notes"
 JOURNALS_DIR = "journals"
+LEGACY_FRONTEND_REPO = "back-office"
+LOCAL_CURSOR_RULES_DIR = SCOPEO_ROOT / NOTES_REPO / "cursor-rules"
+LOCAL_PERSONAL_RULE = "local-personal.mdc"
 
 
 @dataclass
@@ -260,6 +263,55 @@ def _run_setup(worktree: Path, cmd: list[str]) -> None:
         print(f"⚠️  {cmd[0]} exited with code {result.returncode} — continuing anyway")
 
 
+def _frontend_has_env(frontend_dir: Path) -> bool:
+    return any((frontend_dir / filename).exists() or (frontend_dir / filename).is_symlink() for filename in ENV_FILES)
+
+
+def _prepare_frontend_env(repo: Path, worktree: Path) -> None:
+    frontend_dir = worktree / FRONTEND_DIRNAME
+    if not frontend_dir.is_dir() or _frontend_has_env(frontend_dir):
+        return
+
+    candidate_sources = [
+        repo / FRONTEND_DIRNAME,
+        SCOPEO_ROOT / LEGACY_FRONTEND_REPO,
+    ]
+
+    for source_dir in candidate_sources:
+        if not source_dir.is_dir():
+            continue
+        symlink_env_files(
+            source_dir,
+            frontend_dir,
+            display_prefix=f"{FRONTEND_DIRNAME}/",
+        )
+        if _frontend_has_env(frontend_dir):
+            return
+
+
+def _prepare_frontend_dependencies(worktree: Path) -> None:
+    frontend_dir = worktree / FRONTEND_DIRNAME
+    if not (frontend_dir / "package.json").is_file():
+        return
+    if (frontend_dir / "node_modules").exists():
+        return
+    _run_setup(frontend_dir, ["pnpm", "install"])
+
+
+def _install_local_personal_rule(worktree: Path) -> None:
+    source = LOCAL_CURSOR_RULES_DIR / LOCAL_PERSONAL_RULE
+    if not source.is_file():
+        return
+
+    destination = worktree / ".cursor" / "rules" / LOCAL_PERSONAL_RULE
+    if destination.exists() or destination.is_symlink():
+        return
+
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    destination.symlink_to(source)
+    print(f"symlinked .cursor/rules/{LOCAL_PERSONAL_RULE}")
+
+
 def init_scopeo_ticket(plan: InitPlan) -> None:
     if not plan.worktree.exists():
         with chdir(plan.repo):
@@ -269,6 +321,10 @@ def init_scopeo_ticket(plan: InitPlan) -> None:
                 new_branch=not _branch_exists(plan.repo, plan.branch),
             )
         _run_setup(plan.worktree, ["uv", "sync"])
+
+    _prepare_frontend_env(plan.repo, plan.worktree)
+    _prepare_frontend_dependencies(plan.worktree)
+    _install_local_personal_rule(plan.worktree)
 
     plan.journal_dir.mkdir(parents=True, exist_ok=True)
     _ensure_parent_dirs(
