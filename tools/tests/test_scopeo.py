@@ -9,21 +9,21 @@ from typer.testing import CliRunner
 
 import psk.project as project_module
 from psk.cli import psk_app, scopeo_app
-from psk.project import ProjectConfig
-from psk.scopeo import (
+from psk.project import ProjectConfig, resolve_project
+from psk.setup import SetupConfig
+from psk.ticketing import (
     InitPlan,
     TicketParts,
     _build_readme_content,
     _build_workspace_payload,
-    _prepare_frontend_env,
     _write_text_if_missing,
     build_branch_name,
-    build_init_plan,
+    build_init_plan as _generic_build_init_plan,
     build_journal_folder,
     build_ticket_parts,
     find_worktree_for_ticket,
     find_workspace_for_ticket,
-    init_scopeo_ticket,
+    init_ticket,
     list_active_tickets,
     parse_ticket,
     render_summary,
@@ -33,19 +33,30 @@ from psk.scopeo import (
 from psk.staging import StagingPlan
 
 
+def build_init_plan(ticket_or_url, slug, *, branch=None, journal_folder=None, workspace_file=None):
+    return _generic_build_init_plan(
+        resolve_project("scopeo"),
+        ticket_or_url,
+        slug,
+        branch=branch,
+        journal_folder=journal_folder,
+        workspace_file=workspace_file,
+    )
+
+
+def init_scopeo_ticket(plan: InitPlan) -> None:
+    if plan.project is None:
+        plan.project = resolve_project("scopeo")
+    init_ticket(plan)
+
+
 def _write_scopeo_config(
     config_dir: Path,
     *,
     repo: Path = Path("/Scopeo/draftnrun"),
     notes: Path = Path("/Scopeo/scopeo-notes"),
-    frontend_env_source_candidates: list[Path] | None = None,
 ) -> None:
     config_dir.mkdir(parents=True, exist_ok=True)
-    frontend_candidates_block = ""
-    if frontend_env_source_candidates:
-        rendered = ",\n".join(f'  "{path}"' for path in frontend_env_source_candidates)
-        frontend_candidates_block = f"frontend_env_source_candidates = [\n{rendered}\n]\n"
-
     (config_dir / "scopeo.toml").write_text(
         textwrap.dedent(
             f"""\
@@ -54,7 +65,6 @@ def _write_scopeo_config(
             notes_repo = "{notes}"
             github_repo = "Scopeo/draftnrun"
             linear_workspace_url = "https://linear.app/draftnrun"
-            {frontend_candidates_block}\
             """
         )
     )
@@ -131,6 +141,7 @@ class TestResolveWorktreePathForRepo:
             "/home/user/Scopeo/draftnrun-worktrees/pablo-dra-1049-my-feature"
         )
 
+
 class TestBuildInitPlan:
     def test_returns_single_repo_plan(self, monkeypatch, tmp_path):
         repo = Path("/Scopeo/draftnrun")
@@ -173,6 +184,7 @@ def _make_plan(
         notes_repo=notes,
         github_repo="Scopeo/draftnrun",
         linear_workspace_url="https://linear.app/draftnrun",
+        setup=SetupConfig(),
     )
     return InitPlan(
         ticket_id="DRA-1049",
@@ -335,6 +347,7 @@ class TestInitScopeoTicket:
             notes_repo=notes_repo,
             github_repo="Scopeo/draftnrun",
             linear_workspace_url="https://linear.app/draftnrun",
+            setup=SetupConfig(),
         )
 
         return InitPlan(
@@ -355,7 +368,7 @@ class TestInitScopeoTicket:
         with (
             patch("psk.ticketing.create_worktree"),
             patch("psk.ticketing._branch_exists", return_value=False),
-            patch("psk.ticketing._run_setup"),
+            patch("psk.ticketing.run_project_setup"),
             patch("psk.ticketing.chdir", side_effect=_noop_chdir),
         ):
             init_scopeo_ticket(plan)
@@ -368,7 +381,7 @@ class TestInitScopeoTicket:
         with (
             patch("psk.ticketing.create_worktree"),
             patch("psk.ticketing._branch_exists", return_value=False),
-            patch("psk.ticketing._run_setup"),
+            patch("psk.ticketing.run_project_setup"),
             patch("psk.ticketing.chdir", side_effect=_noop_chdir),
         ):
             init_scopeo_ticket(plan)
@@ -376,83 +389,18 @@ class TestInitScopeoTicket:
         payload = json.loads(plan.workspace_file.read_text())
         assert payload["folders"][0]["path"] == str(plan.worktree)
 
-    def test_calls_uv_sync_after_worktree(self, tmp_path):
+    def test_calls_run_project_setup_after_worktree(self, tmp_path):
         plan = self._make_plan(tmp_path)
 
         with (
             patch("psk.ticketing.create_worktree"),
             patch("psk.ticketing._branch_exists", return_value=False),
-            patch("psk.ticketing._run_setup") as mock_setup,
+            patch("psk.ticketing.run_project_setup") as mock_setup,
             patch("psk.ticketing.chdir", side_effect=_noop_chdir),
         ):
             init_scopeo_ticket(plan)
 
-        mock_setup.assert_called_once_with(plan.worktree, ["uv", "sync"])
-
-    def test_calls_pnpm_install_for_frontend_when_node_modules_missing(self, tmp_path):
-        plan = self._make_plan(tmp_path)
-
-        def _create_worktree_side_effect(*_args, **_kwargs):
-            frontend_dir = plan.worktree / "frontend"
-            frontend_dir.mkdir(parents=True)
-            (frontend_dir / "package.json").write_text("{}")
-
-        with (
-            patch("psk.ticketing.create_worktree", side_effect=_create_worktree_side_effect),
-            patch("psk.ticketing._branch_exists", return_value=False),
-            patch("psk.ticketing._run_setup") as mock_setup,
-            patch("psk.ticketing.chdir", side_effect=_noop_chdir),
-        ):
-            init_scopeo_ticket(plan)
-
-        assert mock_setup.call_args_list == [
-            call(plan.worktree, ["uv", "sync"]),
-            call(plan.worktree / "frontend", ["pnpm", "install"]),
-        ]
-
-    def test_skips_pnpm_install_when_frontend_node_modules_exists(self, tmp_path):
-        plan = self._make_plan(tmp_path)
-        frontend_dir = plan.worktree / "frontend"
-        frontend_dir.mkdir(parents=True)
-        (frontend_dir / "package.json").write_text("{}")
-        (frontend_dir / "node_modules").mkdir()
-
-        with (
-            patch("psk.ticketing.create_worktree") as mock_create,
-            patch("psk.ticketing._branch_exists", return_value=False),
-            patch("psk.ticketing._run_setup") as mock_setup,
-            patch("psk.ticketing.chdir", side_effect=_noop_chdir),
-        ):
-            init_scopeo_ticket(plan)
-
-        mock_create.assert_not_called()
-        mock_setup.assert_not_called()
-
-    def test_prepare_frontend_env_uses_configured_source_candidates(self, monkeypatch, tmp_path):
-        repo = tmp_path / "draftnrun"
-        (repo / "frontend").mkdir(parents=True)
-        worktree = tmp_path / "draftnrun-worktrees" / "pablo-dra-1049-feat"
-        frontend_dir = worktree / "frontend"
-        frontend_dir.mkdir(parents=True)
-
-        legacy_repo = tmp_path / "back-office"
-        legacy_repo.mkdir()
-        (legacy_repo / ".env").write_text("VITE_SCOPEO_API_URL=http://localhost:8000")
-
-        config_dir = tmp_path / "projects"
-        monkeypatch.setattr(project_module, "CONFIG_DIR", config_dir)
-        _write_scopeo_config(
-            config_dir,
-            repo=repo,
-            notes=tmp_path / "scopeo-notes",
-            frontend_env_source_candidates=[legacy_repo],
-        )
-
-        _prepare_frontend_env(repo, worktree)
-
-        frontend_env = frontend_dir / ".env"
-        assert frontend_env.is_symlink()
-        assert frontend_env.resolve() == (legacy_repo / ".env").resolve()
+        mock_setup.assert_called_once_with(plan.worktree, plan.repo, plan.project.setup)
 
     def test_skips_worktree_creation_when_exists(self, tmp_path):
         plan = self._make_plan(tmp_path)
@@ -461,12 +409,26 @@ class TestInitScopeoTicket:
         with (
             patch("psk.ticketing.create_worktree") as mock_create,
             patch("psk.ticketing._branch_exists", return_value=False),
-            patch("psk.ticketing._run_setup"),
+            patch("psk.ticketing.run_project_setup"),
             patch("psk.ticketing.chdir", side_effect=_noop_chdir),
         ):
             init_scopeo_ticket(plan)
 
         mock_create.assert_not_called()
+
+    def test_skips_setup_when_worktree_already_exists(self, tmp_path):
+        plan = self._make_plan(tmp_path)
+        plan.worktree.mkdir(parents=True)
+
+        with (
+            patch("psk.ticketing.create_worktree"),
+            patch("psk.ticketing._branch_exists", return_value=False),
+            patch("psk.ticketing.run_project_setup") as mock_setup,
+            patch("psk.ticketing.chdir", side_effect=_noop_chdir),
+        ):
+            init_scopeo_ticket(plan)
+
+        mock_setup.assert_not_called()
 
 
 class TestTicketCli:

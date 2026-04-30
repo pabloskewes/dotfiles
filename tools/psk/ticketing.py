@@ -10,7 +10,8 @@ from datetime import date
 from pathlib import Path
 
 from psk.project import ProjectConfig
-from psk.worktree import ENV_FILES, create_worktree, symlink_env_files
+from psk.setup import run_project_setup
+from psk.worktree import create_worktree
 
 
 @dataclass
@@ -218,7 +219,9 @@ def find_workspace_for_ticket(
     number = int(match.group(2))
     slug = match.group(3)
     journal_folder = f"{number:04d}-{slug}"
-    workspace = notes_repo / journals_dir / journal_folder / f"{journal_folder}.code-workspace"
+    workspace = (
+        notes_repo / journals_dir / journal_folder / f"{journal_folder}.code-workspace"
+    )
     return workspace if workspace.exists() else None
 
 
@@ -248,63 +251,6 @@ def _branch_exists(repo: Path, branch: str) -> bool:
     return bool(result.stdout.strip())
 
 
-def _run_setup(worktree: Path, cmd: list[str]) -> None:
-    print(f"running {' '.join(cmd)} in {worktree.name}...")
-    result = subprocess.run(cmd, cwd=worktree)
-    if result.returncode != 0:
-        print(f"⚠️  {cmd[0]} exited with code {result.returncode} — continuing anyway")
-
-
-def _frontend_has_env(frontend_dir: Path) -> bool:
-    return any((frontend_dir / filename).exists() or (frontend_dir / filename).is_symlink() for filename in ENV_FILES)
-
-
-def _prepare_frontend_env(project: ProjectConfig, worktree: Path) -> None:
-    frontend_dir = worktree / project.frontend_dirname
-    if not frontend_dir.is_dir() or _frontend_has_env(frontend_dir):
-        return
-
-    candidates = project.frontend_env_source_candidates or (
-        project.code_repo / project.frontend_dirname,
-    )
-
-    for source_dir in candidates:
-        if not source_dir.is_dir():
-            continue
-        symlink_env_files(
-            source_dir,
-            frontend_dir,
-            display_prefix=f"{project.frontend_dirname}/",
-        )
-        if _frontend_has_env(frontend_dir):
-            return
-
-
-def _prepare_frontend_dependencies(project: ProjectConfig, worktree: Path) -> None:
-    if project.frontend_setup_command is None:
-        return
-    frontend_dir = worktree / project.frontend_dirname
-    if not (frontend_dir / "package.json").is_file():
-        return
-    if (frontend_dir / "node_modules").exists():
-        return
-    _run_setup(frontend_dir, list(project.frontend_setup_command))
-
-
-def _install_local_cursor_rule(project: ProjectConfig, worktree: Path) -> None:
-    source = project.local_cursor_rule_source
-    if source is None or not source.is_file():
-        return
-
-    destination = worktree / ".cursor" / "rules" / source.name
-    if destination.exists() or destination.is_symlink():
-        return
-
-    destination.parent.mkdir(parents=True, exist_ok=True)
-    destination.symlink_to(source)
-    print(f"symlinked .cursor/rules/{source.name}")
-
-
 def init_ticket(plan: InitPlan) -> None:
     project = _project_for_plan(plan)
     if not plan.worktree.exists():
@@ -314,12 +260,7 @@ def init_ticket(plan: InitPlan) -> None:
                 plan.worktree,
                 new_branch=not _branch_exists(plan.repo, plan.branch),
             )
-        if project.backend_setup_command is not None:
-            _run_setup(plan.worktree, list(project.backend_setup_command))
-
-    _prepare_frontend_env(project, plan.worktree)
-    _prepare_frontend_dependencies(project, plan.worktree)
-    _install_local_cursor_rule(project, plan.worktree)
+        run_project_setup(plan.worktree, plan.repo, project.setup)
 
     plan.journal_dir.mkdir(parents=True, exist_ok=True)
     _ensure_parent_dirs(

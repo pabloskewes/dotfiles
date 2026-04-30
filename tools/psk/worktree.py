@@ -1,9 +1,6 @@
 import subprocess
 from pathlib import Path
 
-ENV_FILES = [".env", ".env.local", ".env.development.local", "credentials.env"]
-FRONTEND_DIRNAME = "frontend"
-
 
 def get_repo_root() -> Path:
     result = subprocess.run(
@@ -35,18 +32,6 @@ def resolve_worktree_path(
     return Path(worktrees_dir) / safe_branch
 
 
-def symlink_env_files(src_dir: Path, dst_dir: Path, display_prefix: str = "") -> None:
-    for filename in ENV_FILES:
-        src = src_dir / filename
-        dst = dst_dir / filename
-        if src.is_file():
-            dst.parent.mkdir(parents=True, exist_ok=True)
-            if dst.exists() or dst.is_symlink():
-                continue
-            dst.symlink_to(src)
-            print(f"symlinked {display_prefix}{filename}")
-
-
 def create_worktree(branch: str, path: Path, new_branch: bool = False) -> None:
     if new_branch:
         cmd = ["git", "worktree", "add", "-b", branch, str(path)]
@@ -56,17 +41,6 @@ def create_worktree(branch: str, path: Path, new_branch: bool = False) -> None:
     result = subprocess.run(cmd)
     if result.returncode != 0:
         raise SystemExit(1)
-
-    repo_root = get_repo_root()
-    symlink_env_files(repo_root, path)
-
-    frontend_src = repo_root / FRONTEND_DIRNAME
-    if frontend_src.is_dir():
-        symlink_env_files(
-            frontend_src,
-            path / FRONTEND_DIRNAME,
-            display_prefix=f"{FRONTEND_DIRNAME}/",
-        )
 
 
 def list_worktrees() -> list[dict[str, str]]:

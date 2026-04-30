@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
 
-from psk.project import ProjectConfig, list_projects
+from psk.project import list_projects
 from psk.ticketing import find_workspace_for_ticket
 
 CURSOR_PROJECTS_DIR = Path.home() / ".cursor" / "projects"
@@ -13,7 +13,8 @@ _STATIC_NOTES_CANDIDATES = [Path.home() / "FCFM" / "Magister" / "thesis-notes"]
 
 def _notes_candidates() -> list[tuple[Path, str]]:
     configured = [
-        (project.notes_repo, project.journals_dir) for project in list_projects().values()
+        (project.notes_repo, project.journals_dir)
+        for project in list_projects().values()
     ]
     static = [(path, "journals") for path in _STATIC_NOTES_CANDIDATES]
     candidates = configured + static
@@ -133,7 +134,9 @@ def list_transcripts(project_dir: Path, n: int = 20) -> list[TranscriptInfo]:
                 messages = [json.loads(line) for line in f if line.strip()]
             user_msgs = [m for m in messages if m.get("role") == "user"]
             first_text = (
-                _clean_user_text(_extract_text(user_msgs[0]["message"]["content"])) if user_msgs else ""
+                _clean_user_text(_extract_text(user_msgs[0]["message"]["content"]))
+                if user_msgs
+                else ""
             )
             results.append(
                 TranscriptInfo(
@@ -209,7 +212,11 @@ def load_turns(jsonl_path: Path) -> list[Turn]:
     turns: list[Turn] = []
     for role, parts in groups:
         combined = "\n\n".join(parts)
-        text = _clean_user_text(combined) if role == "user" else _clean_assistant_text(combined)
+        text = (
+            _clean_user_text(combined)
+            if role == "user"
+            else _clean_assistant_text(combined)
+        )
         if text:
             turns.append(Turn(role=role, text=text))
 

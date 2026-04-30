@@ -1,8 +1,11 @@
 from __future__ import annotations
 
-import tomllib
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
+
+import tomllib
+
+from psk.setup import SetupConfig, parse_setup_config
 
 CONFIG_DIR = Path.home() / ".config" / "psk" / "projects"
 
@@ -18,11 +21,7 @@ class ProjectConfig:
     journals_dir: str = "journals"
     workspace_code_label: str | None = None
     workspace_notes_label: str | None = None
-    backend_setup_command: tuple[str, ...] | None = ("uv", "sync")
-    frontend_setup_command: tuple[str, ...] | None = ("pnpm", "install")
-    frontend_dirname: str = "frontend"
-    frontend_env_source_candidates: tuple[Path, ...] = ()
-    local_cursor_rule_source: Path | None = None
+    setup: SetupConfig = field(default_factory=SetupConfig)
 
     @property
     def worktrees_dir(self) -> Path:
@@ -47,24 +46,9 @@ class ProjectConfig:
                 return True
         return False
 
+
 def _expand_path(value: str) -> Path:
     return Path(value).expanduser().resolve()
-
-
-def _optional_command(value: object) -> tuple[str, ...] | None:
-    if value is None:
-        return None
-    if not isinstance(value, list) or not all(isinstance(item, str) for item in value):
-        raise ValueError("setup commands must be string arrays")
-    return tuple(value)
-
-
-def _optional_paths(value: object) -> tuple[Path, ...]:
-    if value is None:
-        return ()
-    if not isinstance(value, list) or not all(isinstance(item, str) for item in value):
-        raise ValueError("path candidates must be string arrays")
-    return tuple(_expand_path(item) for item in value)
 
 
 def _load_project_file(path: Path) -> ProjectConfig:
@@ -80,15 +64,7 @@ def _load_project_file(path: Path) -> ProjectConfig:
         journals_dir=data.get("journals_dir", "journals"),
         workspace_code_label=data.get("workspace_code_label"),
         workspace_notes_label=data.get("workspace_notes_label"),
-        backend_setup_command=_optional_command(data.get("backend_setup_command", ["uv", "sync"])),
-        frontend_setup_command=_optional_command(data.get("frontend_setup_command", ["pnpm", "install"])),
-        frontend_dirname=data.get("frontend_dirname", "frontend"),
-        frontend_env_source_candidates=_optional_paths(data.get("frontend_env_source_candidates")),
-        local_cursor_rule_source=(
-            _expand_path(data["local_cursor_rule_source"])
-            if data.get("local_cursor_rule_source")
-            else None
-        ),
+        setup=parse_setup_config(data),
     )
 
 
@@ -101,7 +77,9 @@ def list_projects() -> dict[str, ProjectConfig]:
     return projects
 
 
-def resolve_project(project_name: str | None = None, cwd: Path | None = None) -> ProjectConfig:
+def resolve_project(
+    project_name: str | None = None, cwd: Path | None = None
+) -> ProjectConfig:
     projects = list_projects()
 
     if not projects:
@@ -114,7 +92,9 @@ def resolve_project(project_name: str | None = None, cwd: Path | None = None) ->
             return projects[project_name]
         except KeyError as exc:
             known = ", ".join(sorted(projects))
-            raise ValueError(f"Unknown project '{project_name}'. Known: {known}") from exc
+            raise ValueError(
+                f"Unknown project '{project_name}'. Known: {known}"
+            ) from exc
 
     target = (cwd or Path.cwd()).resolve()
     matches = [project for project in projects.values() if project.matches_path(target)]
@@ -122,7 +102,9 @@ def resolve_project(project_name: str | None = None, cwd: Path | None = None) ->
         return matches[0]
     if len(matches) > 1:
         names = ", ".join(sorted(project.name for project in matches))
-        raise ValueError(f"Ambiguous project for {target}. Matches: {names}. Use --project.")
+        raise ValueError(
+            f"Ambiguous project for {target}. Matches: {names}. Use --project."
+        )
 
     current = target if target.is_dir() else target.parent
     for parent in (current, *current.parents):
@@ -130,7 +112,9 @@ def resolve_project(project_name: str | None = None, cwd: Path | None = None) ->
         if not project_yaml.is_file():
             continue
         yaml_matches = [
-            project for project in projects.values() if project.project_yaml == project_yaml
+            project
+            for project in projects.values()
+            if project.project_yaml == project_yaml
         ]
         if len(yaml_matches) == 1:
             return yaml_matches[0]

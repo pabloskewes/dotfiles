@@ -74,9 +74,9 @@ def _find_worktree_path(branch: str) -> Path | None:
     current_path: Path | None = None
     for line in result.stdout.splitlines():
         if line.startswith("worktree "):
-            current_path = Path(line[len("worktree "):])
+            current_path = Path(line[len("worktree ") :])
         elif line.startswith("branch refs/heads/") and current_path is not None:
-            if line[len("branch refs/heads/"):] == branch:
+            if line[len("branch refs/heads/") :] == branch:
                 return current_path
         elif line == "":
             current_path = None
@@ -219,8 +219,7 @@ def build_staging_plan(target_branch: str = "staging") -> StagingPlan:
     changed_files = _diff_name_only(patch_base_sha, "HEAD")
     if not changed_files:
         raise ValueError(
-            "Nothing to deploy: no new feature changes since the last staging "
-            "deploy"
+            "Nothing to deploy: no new feature changes since the last staging " "deploy"
         )
     diff_stat = _diff_stat(patch_base_sha, "HEAD")
 

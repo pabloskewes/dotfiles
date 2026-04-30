@@ -9,7 +9,6 @@ import typer
 
 from psk.cursor import infer_cursor_project, list_transcripts, render_tail
 from psk.db import reset_to_main
-from psk.project import resolve_project
 from psk.pr_inspect import (
     _BOT_NAMES,
     ALL_SECTIONS,
@@ -18,6 +17,8 @@ from psk.pr_inspect import (
     list_coderabbit_threads,
     resolve_coderabbit_threads,
 )
+from psk.project import resolve_project
+from psk.setup import run_project_setup
 from psk.ticketing import (
     build_init_plan,
     find_workspace_for_ticket,
@@ -45,7 +46,9 @@ pr_inspect_app = typer.Typer(
     invoke_without_command=True,
 )
 squash_app = typer.Typer(name="squash", invoke_without_command=True)
-cursor_app = typer.Typer(name="cursor-read", help="Inspect Cursor conversation transcripts.")
+cursor_app = typer.Typer(
+    name="cursor-read", help="Inspect Cursor conversation transcripts."
+)
 
 psk_app.add_typer(ticket_app, name="ticket")
 
@@ -82,6 +85,12 @@ def create(
         create_worktree(branch, path, new_branch)
     except SystemExit:
         raise typer.Exit(1)
+
+    try:
+        project = resolve_project(cwd=repo_root)
+        run_project_setup(path, repo_root, project.setup)
+    except ValueError:
+        pass  # no project config for this repo — setup is a no-op
 
     typer.echo(f"\n✓ Worktree listo en: {path}")
 

@@ -3,7 +3,6 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 from psk.worktree import (
-    FRONTEND_DIRNAME,
     create_worktree,
     get_repo_root,
     list_worktrees,
@@ -97,6 +96,7 @@ class TestResolveWorktreePath:
 # list_worktrees
 # ---------------------------------------------------------------------------
 
+
 _PORCELAIN_TWO_ENTRIES = (
     "worktree /home/user/myrepo\n"
     "HEAD abc1234def5678\n"
@@ -162,10 +162,7 @@ class TestListWorktrees:
 
 class TestCreateWorktree:
     def test_cmd_without_new_branch(self):
-        with (
-            patch("subprocess.run") as mock_run,
-            patch("psk.worktree.get_repo_root", return_value=Path("/repo")),
-        ):
+        with patch("subprocess.run") as mock_run:
             mock_run.return_value = MagicMock(returncode=0)
             create_worktree("main", Path("/tmp/wt"))
 
@@ -173,10 +170,7 @@ class TestCreateWorktree:
         assert first_call_args == ["git", "worktree", "add", "/tmp/wt", "main"]
 
     def test_cmd_with_new_branch(self):
-        with (
-            patch("subprocess.run") as mock_run,
-            patch("psk.worktree.get_repo_root", return_value=Path("/repo")),
-        ):
+        with patch("subprocess.run") as mock_run:
             mock_run.return_value = MagicMock(returncode=0)
             create_worktree("feature/foo", Path("/tmp/wt"), new_branch=True)
 
@@ -189,85 +183,6 @@ class TestCreateWorktree:
             "feature/foo",
             "/tmp/wt",
         ]
-
-    def test_symlinks_existing_env_files(self, tmp_path):
-        repo_root = tmp_path / "repo"
-        repo_root.mkdir()
-        worktree_path = tmp_path / "worktree"
-        worktree_path.mkdir()
-
-        (repo_root / ".env").write_text("SECRET=1")
-        (repo_root / "credentials.env").write_text("TOKEN=abc")
-
-        with (
-            patch("subprocess.run") as mock_run,
-            patch("psk.worktree.get_repo_root", return_value=repo_root),
-        ):
-            mock_run.return_value = MagicMock(returncode=0)
-            create_worktree("main", worktree_path)
-
-        assert (worktree_path / ".env").is_symlink()
-        assert (worktree_path / ".env").resolve() == (repo_root / ".env").resolve()
-        assert (worktree_path / "credentials.env").is_symlink()
-
-    def test_skips_env_files_not_present_in_repo(self, tmp_path):
-        repo_root = tmp_path / "repo"
-        repo_root.mkdir()
-        worktree_path = tmp_path / "worktree"
-        worktree_path.mkdir()
-
-        # Only .env exists; the rest don't
-        (repo_root / ".env").write_text("X=1")
-
-        with (
-            patch("subprocess.run") as mock_run,
-            patch("psk.worktree.get_repo_root", return_value=repo_root),
-        ):
-            mock_run.return_value = MagicMock(returncode=0)
-            create_worktree("main", worktree_path)
-
-        assert (worktree_path / ".env").is_symlink()
-        assert not (worktree_path / ".env.local").exists()
-        assert not (worktree_path / ".env.development.local").exists()
-
-    def test_symlinks_frontend_env_files_when_frontend_dir_exists(self, tmp_path):
-        repo_root = tmp_path / "repo"
-        frontend_src = repo_root / FRONTEND_DIRNAME
-        frontend_src.mkdir(parents=True)
-        worktree_path = tmp_path / "worktree"
-        (worktree_path / FRONTEND_DIRNAME).mkdir(parents=True)
-
-        (frontend_src / ".env").write_text("VITE_SCOPEO_API_URL=http://localhost:8000")
-
-        with (
-            patch("subprocess.run") as mock_run,
-            patch("psk.worktree.get_repo_root", return_value=repo_root),
-        ):
-            mock_run.return_value = MagicMock(returncode=0)
-            create_worktree("main", worktree_path)
-
-        frontend_env = worktree_path / FRONTEND_DIRNAME / ".env"
-        assert frontend_env.is_symlink()
-        assert frontend_env.resolve() == (frontend_src / ".env").resolve()
-
-    def test_skips_symlink_when_dst_already_exists(self, tmp_path):
-        repo_root = tmp_path / "repo"
-        repo_root.mkdir()
-        worktree_path = tmp_path / "worktree"
-        worktree_path.mkdir()
-
-        (repo_root / ".env").write_text("SECRET=1")
-        (worktree_path / ".env").write_text("already here")
-
-        with (
-            patch("subprocess.run") as mock_run,
-            patch("psk.worktree.get_repo_root", return_value=repo_root),
-        ):
-            mock_run.return_value = MagicMock(returncode=0)
-            create_worktree("main", worktree_path)
-
-        assert not (worktree_path / ".env").is_symlink()
-        assert (worktree_path / ".env").read_text() == "already here"
 
     def test_raises_system_exit_on_git_failure(self):
         with patch("subprocess.run") as mock_run:

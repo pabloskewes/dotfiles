@@ -138,7 +138,9 @@ class ReviewThread:
     snippet: str
 
 
-def _fetch_open_coderabbit_threads(pr_num: str, repo: str, env: dict[str, str]) -> list[ReviewThread]:
+def _fetch_open_coderabbit_threads(
+    pr_num: str, repo: str, env: dict[str, str]
+) -> list[ReviewThread]:
     owner, name = repo.split("/", 1)
     query = """
 query($owner:String!, $name:String!, $pr:Int!, $after:String) {
@@ -176,23 +178,27 @@ query($owner:String!, $name:String!, $pr:Int!, $after:String) {
                 continue
             comments = node.get("comments", {}).get("nodes", [])
             authors = {
-                c.get("author", {}).get("login")
-                for c in comments
-                if c.get("author")
+                c.get("author", {}).get("login") for c in comments if c.get("author")
             }
             if not (authors & CODERABBIT_LOGINS):
                 continue
             first_body = next(
-                (c.get("body", "") for c in comments if c.get("author", {}).get("login") in CODERABBIT_LOGINS),
+                (
+                    c.get("body", "")
+                    for c in comments
+                    if c.get("author", {}).get("login") in CODERABBIT_LOGINS
+                ),
                 "",
             )
             snippet = first_body.split("\n")[0][:120]
-            threads.append(ReviewThread(
-                id=node["id"],
-                path=node.get("path") or "?",
-                line=node.get("line"),
-                snippet=snippet,
-            ))
+            threads.append(
+                ReviewThread(
+                    id=node["id"],
+                    path=node.get("path") or "?",
+                    line=node.get("line"),
+                    snippet=snippet,
+                )
+            )
         if not data["pageInfo"]["hasNextPage"]:
             break
         after = data["pageInfo"]["endCursor"]
@@ -210,7 +216,9 @@ mutation($id:ID!) {
     _graphql(mutation, {"id": thread_id}, env)
 
 
-def list_coderabbit_threads(pr_num: str, repo: str = DEFAULT_REPO) -> list[ReviewThread]:
+def list_coderabbit_threads(
+    pr_num: str, repo: str = DEFAULT_REPO
+) -> list[ReviewThread]:
     env = _base_env()
     return _fetch_open_coderabbit_threads(pr_num, repo, env)
 
