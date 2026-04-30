@@ -1,4 +1,5 @@
 import json
+import textwrap
 from contextlib import contextmanager
 from pathlib import Path
 from unittest.mock import MagicMock, call, patch
@@ -6,7 +7,9 @@ from unittest.mock import MagicMock, call, patch
 import pytest
 from typer.testing import CliRunner
 
-from psk.cli import scopeo_app
+import psk.project as project_module
+from psk.cli import psk_app, scopeo_app
+from psk.project import ProjectConfig
 from psk.scopeo import (
     InitPlan,
     TicketParts,
@@ -28,6 +31,33 @@ from psk.scopeo import (
     slugify,
 )
 from psk.staging import StagingPlan
+
+
+def _write_scopeo_config(
+    config_dir: Path,
+    *,
+    repo: Path = Path("/Scopeo/draftnrun"),
+    notes: Path = Path("/Scopeo/scopeo-notes"),
+    frontend_env_source_candidates: list[Path] | None = None,
+) -> None:
+    config_dir.mkdir(parents=True, exist_ok=True)
+    frontend_candidates_block = ""
+    if frontend_env_source_candidates:
+        rendered = ",\n".join(f'  "{path}"' for path in frontend_env_source_candidates)
+        frontend_candidates_block = f"frontend_env_source_candidates = [\n{rendered}\n]\n"
+
+    (config_dir / "scopeo.toml").write_text(
+        textwrap.dedent(
+            f"""\
+            name = "scopeo"
+            code_repo = "{repo}"
+            notes_repo = "{notes}"
+            github_repo = "Scopeo/draftnrun"
+            linear_workspace_url = "https://linear.app/draftnrun"
+            {frontend_candidates_block}\
+            """
+        )
+    )
 
 
 class TestParseTicket:
@@ -101,26 +131,13 @@ class TestResolveWorktreePathForRepo:
             "/home/user/Scopeo/draftnrun-worktrees/pablo-dra-1049-my-feature"
         )
 
-
-def _make_mock_resolve_repo(repo, notes):
-    def side_effect(root, name):
-        mapping = {
-            "draftnrun": repo,
-            "scopeo-notes": notes,
-        }
-        if name not in mapping:
-            raise ValueError(f"Unexpected repo: {name}")
-        return mapping[name]
-
-    return side_effect
-
-
 class TestBuildInitPlan:
-    @patch("psk.scopeo.resolve_repo")
-    def test_returns_single_repo_plan(self, mock_resolve_repo):
+    def test_returns_single_repo_plan(self, monkeypatch, tmp_path):
         repo = Path("/Scopeo/draftnrun")
         notes = Path("/Scopeo/scopeo-notes")
-        mock_resolve_repo.side_effect = _make_mock_resolve_repo(repo, notes)
+        config_dir = tmp_path / "projects"
+        monkeypatch.setattr(project_module, "CONFIG_DIR", config_dir)
+        _write_scopeo_config(config_dir, repo=repo, notes=notes)
 
         plan = build_init_plan("DRA-1049", "my-feature")
 
@@ -132,11 +149,12 @@ class TestBuildInitPlan:
             "/Scopeo/draftnrun-worktrees/pablo-dra-1049-my-feature"
         )
 
-    @patch("psk.scopeo.resolve_repo")
-    def test_custom_workspace_file_override(self, mock_resolve_repo):
+    def test_custom_workspace_file_override(self, monkeypatch, tmp_path):
         repo = Path("/Scopeo/draftnrun")
         notes = Path("/Scopeo/scopeo-notes")
-        mock_resolve_repo.side_effect = _make_mock_resolve_repo(repo, notes)
+        config_dir = tmp_path / "projects"
+        monkeypatch.setattr(project_module, "CONFIG_DIR", config_dir)
+        _write_scopeo_config(config_dir, repo=repo, notes=notes)
 
         plan = build_init_plan(
             "DRA-1049", "my-feature", workspace_file="/custom/path.code-workspace"
@@ -149,6 +167,13 @@ def _make_plan(
     repo=Path("/Scopeo/draftnrun"),
     notes=Path("/Scopeo/scopeo-notes"),
 ):
+    project = ProjectConfig(
+        name="scopeo",
+        code_repo=repo,
+        notes_repo=notes,
+        github_repo="Scopeo/draftnrun",
+        linear_workspace_url="https://linear.app/draftnrun",
+    )
     return InitPlan(
         ticket_id="DRA-1049",
         branch="pablo/dra-1049-my-feature",
@@ -158,6 +183,7 @@ def _make_plan(
         notes_repo=notes,
         journal_dir=notes / "journals/1049-my-feature",
         workspace_file=notes / "journals/1049-my-feature/1049-my-feature.code-workspace",
+        project=project,
     )
 
 
@@ -176,7 +202,7 @@ class TestRenderSummary:
 class TestBuildReadmeContent:
     def test_contains_yaml_frontmatter(self):
         plan = _make_plan()
-        with patch("psk.scopeo.date") as mock_date:
+        with patch("psk.ticketing.date") as mock_date:
             mock_date.today.return_value.isoformat.return_value = "2026-01-15"
             content = _build_readme_content(plan)
         assert content.startswith("---\n")
@@ -184,7 +210,7 @@ class TestBuildReadmeContent:
 
     def test_does_not_reference_back_office(self):
         plan = _make_plan()
-        with patch("psk.scopeo.date") as mock_date:
+        with patch("psk.ticketing.date") as mock_date:
             mock_date.today.return_value.isoformat.return_value = "2026-01-15"
             content = _build_readme_content(plan)
         assert "back-office" not in content
@@ -303,6 +329,13 @@ class TestInitScopeoTicket:
         notes_repo.mkdir()
         journal_dir = notes_repo / "journals/1049-feat"
         workspace_file = journal_dir / "1049-feat.code-workspace"
+        project = ProjectConfig(
+            name="scopeo",
+            code_repo=repo,
+            notes_repo=notes_repo,
+            github_repo="Scopeo/draftnrun",
+            linear_workspace_url="https://linear.app/draftnrun",
+        )
 
         return InitPlan(
             ticket_id="DRA-1049",
@@ -313,16 +346,17 @@ class TestInitScopeoTicket:
             notes_repo=notes_repo,
             journal_dir=journal_dir,
             workspace_file=workspace_file,
+            project=project,
         )
 
     def test_creates_journal_directory(self, tmp_path):
         plan = self._make_plan(tmp_path)
 
         with (
-            patch("psk.scopeo.create_worktree"),
-            patch("psk.scopeo._branch_exists", return_value=False),
-            patch("psk.scopeo._run_setup"),
-            patch("psk.scopeo.chdir", side_effect=_noop_chdir),
+            patch("psk.ticketing.create_worktree"),
+            patch("psk.ticketing._branch_exists", return_value=False),
+            patch("psk.ticketing._run_setup"),
+            patch("psk.ticketing.chdir", side_effect=_noop_chdir),
         ):
             init_scopeo_ticket(plan)
 
@@ -332,10 +366,10 @@ class TestInitScopeoTicket:
         plan = self._make_plan(tmp_path)
 
         with (
-            patch("psk.scopeo.create_worktree"),
-            patch("psk.scopeo._branch_exists", return_value=False),
-            patch("psk.scopeo._run_setup"),
-            patch("psk.scopeo.chdir", side_effect=_noop_chdir),
+            patch("psk.ticketing.create_worktree"),
+            patch("psk.ticketing._branch_exists", return_value=False),
+            patch("psk.ticketing._run_setup"),
+            patch("psk.ticketing.chdir", side_effect=_noop_chdir),
         ):
             init_scopeo_ticket(plan)
 
@@ -346,10 +380,10 @@ class TestInitScopeoTicket:
         plan = self._make_plan(tmp_path)
 
         with (
-            patch("psk.scopeo.create_worktree"),
-            patch("psk.scopeo._branch_exists", return_value=False),
-            patch("psk.scopeo._run_setup") as mock_setup,
-            patch("psk.scopeo.chdir", side_effect=_noop_chdir),
+            patch("psk.ticketing.create_worktree"),
+            patch("psk.ticketing._branch_exists", return_value=False),
+            patch("psk.ticketing._run_setup") as mock_setup,
+            patch("psk.ticketing.chdir", side_effect=_noop_chdir),
         ):
             init_scopeo_ticket(plan)
 
@@ -364,10 +398,10 @@ class TestInitScopeoTicket:
             (frontend_dir / "package.json").write_text("{}")
 
         with (
-            patch("psk.scopeo.create_worktree", side_effect=_create_worktree_side_effect),
-            patch("psk.scopeo._branch_exists", return_value=False),
-            patch("psk.scopeo._run_setup") as mock_setup,
-            patch("psk.scopeo.chdir", side_effect=_noop_chdir),
+            patch("psk.ticketing.create_worktree", side_effect=_create_worktree_side_effect),
+            patch("psk.ticketing._branch_exists", return_value=False),
+            patch("psk.ticketing._run_setup") as mock_setup,
+            patch("psk.ticketing.chdir", side_effect=_noop_chdir),
         ):
             init_scopeo_ticket(plan)
 
@@ -384,17 +418,17 @@ class TestInitScopeoTicket:
         (frontend_dir / "node_modules").mkdir()
 
         with (
-            patch("psk.scopeo.create_worktree") as mock_create,
-            patch("psk.scopeo._branch_exists", return_value=False),
-            patch("psk.scopeo._run_setup") as mock_setup,
-            patch("psk.scopeo.chdir", side_effect=_noop_chdir),
+            patch("psk.ticketing.create_worktree") as mock_create,
+            patch("psk.ticketing._branch_exists", return_value=False),
+            patch("psk.ticketing._run_setup") as mock_setup,
+            patch("psk.ticketing.chdir", side_effect=_noop_chdir),
         ):
             init_scopeo_ticket(plan)
 
         mock_create.assert_not_called()
         mock_setup.assert_not_called()
 
-    def test_prepare_frontend_env_falls_back_to_legacy_back_office_repo(self, tmp_path):
+    def test_prepare_frontend_env_uses_configured_source_candidates(self, monkeypatch, tmp_path):
         repo = tmp_path / "draftnrun"
         (repo / "frontend").mkdir(parents=True)
         worktree = tmp_path / "draftnrun-worktrees" / "pablo-dra-1049-feat"
@@ -405,8 +439,16 @@ class TestInitScopeoTicket:
         legacy_repo.mkdir()
         (legacy_repo / ".env").write_text("VITE_SCOPEO_API_URL=http://localhost:8000")
 
-        with patch("psk.scopeo.SCOPEO_ROOT", tmp_path):
-            _prepare_frontend_env(repo, worktree)
+        config_dir = tmp_path / "projects"
+        monkeypatch.setattr(project_module, "CONFIG_DIR", config_dir)
+        _write_scopeo_config(
+            config_dir,
+            repo=repo,
+            notes=tmp_path / "scopeo-notes",
+            frontend_env_source_candidates=[legacy_repo],
+        )
+
+        _prepare_frontend_env(repo, worktree)
 
         frontend_env = frontend_dir / ".env"
         assert frontend_env.is_symlink()
@@ -417,31 +459,34 @@ class TestInitScopeoTicket:
         plan.worktree.mkdir(parents=True)
 
         with (
-            patch("psk.scopeo.create_worktree") as mock_create,
-            patch("psk.scopeo._branch_exists", return_value=False),
-            patch("psk.scopeo._run_setup"),
-            patch("psk.scopeo.chdir", side_effect=_noop_chdir),
+            patch("psk.ticketing.create_worktree") as mock_create,
+            patch("psk.ticketing._branch_exists", return_value=False),
+            patch("psk.ticketing._run_setup"),
+            patch("psk.ticketing.chdir", side_effect=_noop_chdir),
         ):
             init_scopeo_ticket(plan)
 
         mock_create.assert_not_called()
 
 
-class TestScopeoCli:
+class TestTicketCli:
     runner = CliRunner()
 
     def test_ticket_init_help_does_not_show_frontend(self):
-        result = self.runner.invoke(scopeo_app, ["ticket-init", "--help"])
+        result = self.runner.invoke(psk_app, ["ticket", "init", "--help"])
         assert result.exit_code == 0
         assert "--frontend" not in result.output
 
     def test_ticket_init_dry_run_outputs_single_worktree_summary(self):
         plan = _make_plan()
 
-        with patch("psk.cli.build_init_plan", return_value=plan):
+        with (
+            patch("psk.cli.resolve_project", return_value=MagicMock()),
+            patch("psk.cli.build_init_plan", return_value=plan),
+        ):
             result = self.runner.invoke(
-                scopeo_app,
-                ["ticket-init", "DRA-1049", "my-feature", "--dry-run"],
+                psk_app,
+                ["ticket", "init", "DRA-1049", "my-feature", "--dry-run"],
             )
 
         assert result.exit_code == 0
@@ -453,20 +498,45 @@ class TestScopeoCli:
         workspace = Path(
             "/Scopeo/scopeo-notes/journals/1049-my-feature/1049-my-feature.code-workspace"
         )
+        project = MagicMock(code_repo=Path("/Scopeo/draftnrun"))
+        project.notes_repo = Path("/Scopeo/scopeo-notes")
+        project.journals_dir = "journals"
 
         with (
+            patch("psk.cli.resolve_project", return_value=project),
             patch("psk.cli.find_worktree_for_ticket", return_value=worktree),
             patch("psk.cli.find_workspace_for_ticket", return_value=workspace),
             patch("psk.cli.shutil.which", return_value="/usr/local/bin/cursor"),
             patch("psk.cli.subprocess.run") as mock_run,
         ):
-            result = self.runner.invoke(scopeo_app, ["ticket-open", "DRA-1049"])
+            result = self.runner.invoke(psk_app, ["ticket", "open", "DRA-1049"])
 
         assert result.exit_code == 0
         assert [call.args[0] for call in mock_run.call_args_list] == [
             ["open", "-a", "Terminal", str(worktree)],
             ["/usr/local/bin/cursor", str(workspace)],
         ]
+
+    def test_ticket_list_uses_inferred_project_repo(self):
+        project = MagicMock(code_repo=Path("/Scopeo/draftnrun"))
+        tickets = [
+            MagicMock(ticket_id="DRA-1049", slug="my-feature"),
+            MagicMock(ticket_id="DRA-1050", slug="other-feature"),
+        ]
+
+        with (
+            patch("psk.cli.resolve_project", return_value=project),
+            patch("psk.cli.list_active_tickets", return_value=tickets),
+        ):
+            result = self.runner.invoke(psk_app, ["ticket", "list"])
+
+        assert result.exit_code == 0
+        assert "DRA-1049" in result.output
+        assert "other-feature" in result.output
+
+
+class TestScopeoCli:
+    runner = CliRunner()
 
     def test_staging_help_shows_push_flag(self):
         result = self.runner.invoke(scopeo_app, ["staging", "--help"])

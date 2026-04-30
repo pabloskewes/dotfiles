@@ -11,11 +11,14 @@ import shutil
 import subprocess
 from pathlib import Path
 
-from psk.scopeo import BACKEND_REPO, SCOPEO_ROOT
+from psk.project import resolve_project
 
 _ALEMBIC_INI = "ada_backend/database/alembic.ini"
 _VERSIONS_DIR = "ada_backend/database/alembic/versions"
-_MAIN_REPO = SCOPEO_ROOT / BACKEND_REPO
+
+
+def _main_repo() -> Path:
+    return resolve_project("scopeo").code_repo
 
 
 def _check_prerequisites() -> None:
@@ -47,14 +50,14 @@ def _stream_alembic(cwd: Path, *args: str) -> None:
 
 def _get_db_current() -> str | None:
     """Return the current alembic revision of the DB, or None if empty."""
-    result = _run_alembic(_MAIN_REPO, "current")
+    result = _run_alembic(_main_repo(), "current")
     match = re.search(r"^([a-f0-9]+)", result.stdout, re.MULTILINE)
     return match.group(1) if match else None
 
 
 def _get_main_revisions() -> set[str]:
     """Return the set of all revision IDs present in main's alembic versions dir."""
-    versions_dir = _MAIN_REPO / _VERSIONS_DIR
+    versions_dir = _main_repo() / _VERSIONS_DIR
     revisions = set()
     for py_file in versions_dir.glob("*.py"):
         # Filenames are like: a3b4c5d6e7e8_description.py
@@ -66,7 +69,7 @@ def _get_main_revisions() -> set[str]:
 
 def _get_main_head() -> str:
     """Return the single alembic HEAD of main."""
-    result = _run_alembic(_MAIN_REPO, "heads")
+    result = _run_alembic(_main_repo(), "heads")
     heads = re.findall(r"^([a-f0-9]+)\s+\(head\)", result.stdout, re.MULTILINE)
     if len(heads) != 1:
         raise RuntimeError(
@@ -78,18 +81,19 @@ def _get_main_head() -> str:
 
 def _list_worktree_paths() -> list[Path]:
     """Return paths of all draftnrun worktrees (excluding the main checkout)."""
+    main_repo = _main_repo()
     result = subprocess.run(
         ["git", "worktree", "list", "--porcelain"],
         capture_output=True,
         text=True,
         check=True,
-        cwd=_MAIN_REPO,
+        cwd=main_repo,
     )
     paths = []
     for line in result.stdout.splitlines():
         if line.startswith("worktree "):
             p = Path(line[len("worktree ") :])
-            if p != _MAIN_REPO:
+            if p != main_repo:
                 paths.append(p)
     return paths
 
@@ -134,7 +138,7 @@ def reset_to_main(*, upgrade_to: Path | None = None, dry_run: bool = False) -> N
                 print(f"  would upgrade to main HEAD: {main_head}")
             else:
                 print(f"  Upgrading to main HEAD...")
-                _stream_alembic(_MAIN_REPO, "upgrade", main_head)
+                _stream_alembic(_main_repo(), "upgrade", main_head)
                 print("  Done.")
     else:
         print(f"DB has branch-specific migration(s). Stripping...")
@@ -169,7 +173,7 @@ def reset_to_main(*, upgrade_to: Path | None = None, dry_run: bool = False) -> N
             print(f"  DB is now at: {current}")
             if current != main_head:
                 print(f"  Upgrading to main HEAD ({main_head})...")
-                _stream_alembic(_MAIN_REPO, "upgrade", main_head)
+                _stream_alembic(_main_repo(), "upgrade", main_head)
 
         print("  Done.")
 

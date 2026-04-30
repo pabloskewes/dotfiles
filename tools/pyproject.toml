@@ -6,6 +6,7 @@ requires-python = ">=3.11"
 dependencies = ["typer>=0.15.1", "questionary>=2.0", "textual"]
 
 [project.scripts]
+psk = "psk.cli:main_psk"
 worktree = "psk.cli:main_worktree"
 scopeo = "psk.cli:main_scopeo"
 pr-inspect = "psk.cli:main_pr_inspect"

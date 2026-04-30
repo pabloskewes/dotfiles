@@ -4,13 +4,27 @@ from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
 
-from psk.scopeo import find_workspace_for_ticket
+from psk.project import ProjectConfig, list_projects
+from psk.ticketing import find_workspace_for_ticket
 
 CURSOR_PROJECTS_DIR = Path.home() / ".cursor" / "projects"
-_NOTES_CANDIDATES = [
-    Path.home() / "Scopeo" / "scopeo-notes",
-    Path.home() / "FCFM" / "Magister" / "thesis-notes",
-]
+_STATIC_NOTES_CANDIDATES = [Path.home() / "FCFM" / "Magister" / "thesis-notes"]
+
+
+def _notes_candidates() -> list[tuple[Path, str]]:
+    configured = [
+        (project.notes_repo, project.journals_dir) for project in list_projects().values()
+    ]
+    static = [(path, "journals") for path in _STATIC_NOTES_CANDIDATES]
+    candidates = configured + static
+    unique: list[tuple[Path, str]] = []
+    seen: set[tuple[Path, str]] = set()
+    for candidate in candidates:
+        if candidate in seen:
+            continue
+        seen.add(candidate)
+        unique.append(candidate)
+    return unique
 
 
 def _path_to_project_hash(path: Path) -> str:
@@ -29,10 +43,10 @@ def _has_transcripts(project: Path) -> bool:
 
 def _workspace_for_dir(cwd: Path) -> Path | None:
     """Try to find a .code-workspace for a worktree/repo CWD via notes repos."""
-    for notes_repo in _NOTES_CANDIDATES:
+    for notes_repo, journals_dir in _notes_candidates():
         if not notes_repo.exists():
             continue
-        workspace = find_workspace_for_ticket(cwd, notes_repo)
+        workspace = find_workspace_for_ticket(cwd, notes_repo, journals_dir)
         if workspace:
             return workspace
     return None

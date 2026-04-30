@@ -1,6 +1,6 @@
 # psk tools
 
-Personal CLI tools for Scopeo development workflows. Installed as a `uv` tool, exposing two entry points: `scopeo` and `worktree`.
+Personal CLI tools for development workflows. Installed as a `uv` tool, exposing entry points such as `psk`, `scopeo`, `worktree`, and `pr-inspect`.
 
 ## Install / reinstall
 
@@ -9,7 +9,60 @@ cd ~/dotfiles/tools
 uv tool install --reinstall .
 ```
 
+## Project config
+
+`psk` reads project definitions from `~/.config/psk/projects/*.toml`.
+
+Example `~/.config/psk/projects/scopeo.toml`:
+
+```toml
+name = "scopeo"
+code_repo = "~/Scopeo/draftnrun"
+notes_repo = "~/Scopeo/scopeo-notes"
+github_repo = "Scopeo/draftnrun"
+linear_workspace_url = "https://linear.app/draftnrun"
+branch_owner = "pablo"
+workspace_notes_label = "📓 scopeo-notes"
+frontend_env_source_candidates = [
+  "~/Scopeo/draftnrun/frontend",
+  "~/Scopeo/back-office",
+]
+local_cursor_rule_source = "~/Scopeo/scopeo-notes/cursor-rules/local-personal.mdc"
+```
+
 ## Commands
+
+### `psk`
+
+Project-agnostic workflow helpers.
+
+| Command | Description |
+|---|---|
+| `psk ticket init` | Initialize a new ticket worktree, journal folder, and workspace file |
+| `psk ticket open` | Open an existing ticket's monorepo worktree and workspace |
+| `psk ticket list` | List active ticket worktrees for the inferred project |
+
+#### `psk ticket init`
+
+```bash
+# Preview the resolved branch/worktree/journal paths
+psk ticket init DRA-1049 my-feature --dry-run
+
+# Create the worktree + journal + workspace
+psk ticket init DRA-1049 my-feature --yes --open
+```
+
+#### `psk ticket open`
+
+```bash
+psk ticket open DRA-1049
+```
+
+#### `psk ticket list`
+
+```bash
+psk ticket list
+```
 
 ### `scopeo`
 
@@ -17,29 +70,7 @@ Scopeo-specific helpers for the `draftnrun` monorepo.
 
 | Command | Description |
 |---|---|
-| `scopeo ticket-init` | Initialize a new ticket worktree, journal folder, and workspace file |
-| `scopeo ticket-open` | Open an existing ticket's monorepo worktree and workspace |
 | `scopeo db-reset-to-main` | Downgrade DB to main HEAD (see below) |
-
-#### `scopeo ticket-init`
-
-Creates one worktree under `~/Scopeo/draftnrun-worktrees/`, plus the journal folder and Cursor workspace under `~/Scopeo/scopeo-notes/journals/`.
-
-```bash
-# Preview the resolved branch/worktree/journal paths
-scopeo ticket-init DRA-1049 my-feature --dry-run
-
-# Create the worktree + journal + workspace
-scopeo ticket-init DRA-1049 my-feature --yes --open
-```
-
-#### `scopeo ticket-open`
-
-Opens one terminal at the ticket worktree root and, when present, opens the matching Cursor workspace.
-
-```bash
-scopeo ticket-open DRA-1049
-```
 
 #### `scopeo db-reset-to-main`
 
@@ -55,8 +86,6 @@ scopeo db-reset-to-main
 # Downgrade to main HEAD, then upgrade to current branch HEAD
 scopeo db-reset-to-main --upgrade
 
-# Run from a specific worktree path instead of cwd
-scopeo db-reset-to-main --repo /path/to/worktree
 ```
 
 ### `worktree`

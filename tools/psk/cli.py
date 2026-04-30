@@ -9,6 +9,7 @@ import typer
 
 from psk.cursor import infer_cursor_project, list_transcripts, render_tail
 from psk.db import reset_to_main
+from psk.project import resolve_project
 from psk.pr_inspect import (
     _BOT_NAMES,
     ALL_SECTIONS,
@@ -17,14 +18,11 @@ from psk.pr_inspect import (
     list_coderabbit_threads,
     resolve_coderabbit_threads,
 )
-from psk.scopeo import (
-    MONOREPO_REPO,
-    NOTES_REPO,
-    SCOPEO_ROOT,
+from psk.ticketing import (
     build_init_plan,
     find_workspace_for_ticket,
     find_worktree_for_ticket,
-    init_scopeo_ticket,
+    init_ticket,
     list_active_tickets,
     parse_ticket,
     render_summary,
@@ -39,6 +37,8 @@ from psk.worktree import (
 
 worktree_app = typer.Typer(name="worktree", help="Manage git worktrees.")
 scopeo_app = typer.Typer(name="scopeo", help="Scopeo-specific helpers.")
+psk_app = typer.Typer(name="psk", help="Personal automation tools.")
+ticket_app = typer.Typer(name="ticket", help="Multi-project ticket workflow.")
 pr_inspect_app = typer.Typer(
     name="pr-inspect",
     help="Inspect a GitHub pull request.",
@@ -46,6 +46,8 @@ pr_inspect_app = typer.Typer(
 )
 squash_app = typer.Typer(name="squash", invoke_without_command=True)
 cursor_app = typer.Typer(name="cursor-read", help="Inspect Cursor conversation transcripts.")
+
+psk_app.add_typer(ticket_app, name="ticket")
 
 
 @worktree_app.command()
@@ -218,11 +220,14 @@ def db_reset_to_main(
         raise typer.Exit(1)
 
 
-@scopeo_app.command("ticket-init")
+@ticket_app.command("init")
 def ticket_init(
     ticket: str = typer.Argument(..., help="Linear ticket id or URL (e.g. DRA-1049)"),
     slug: Optional[str] = typer.Argument(
         None, help="Slug for branch and journal folder"
+    ),
+    project_name: Optional[str] = typer.Option(
+        None, "--project", help="Override inferred project"
     ),
     branch: Optional[str] = typer.Option(None, help="Override branch name"),
     journal_folder: Optional[str] = typer.Option(None, help="Override journal folder"),
@@ -248,7 +253,9 @@ def ticket_init(
         slug = typer.prompt("Slug")
 
     try:
+        project = resolve_project(project_name)
         plan = build_init_plan(
+            project,
             ticket,
             slug,
             branch=branch,
@@ -268,11 +275,11 @@ def ticket_init(
         raise typer.Exit(0)
 
     try:
-        init_scopeo_ticket(plan)
+        init_ticket(plan)
     except SystemExit:
         raise typer.Exit(1)
 
-    typer.echo("\n✓ Scopeo ticket initialized")
+    typer.echo("\n✓ Ticket initialized")
 
     if open_workspace:
         cursor_bin = shutil.which("cursor")
@@ -283,14 +290,23 @@ def ticket_init(
             typer.echo(f"   cursor {plan.workspace_file}", err=True)
 
 
-@scopeo_app.command("ticket-open")
+@ticket_app.command("open")
 def ticket_open(
     ticket: Optional[str] = typer.Argument(
         None, help="Linear ticket id or URL (e.g. DRA-996)"
     ),
+    project_name: Optional[str] = typer.Option(
+        None, "--project", help="Override inferred project"
+    ),
 ):
-    repo = SCOPEO_ROOT / MONOREPO_REPO
-    notes_repo = SCOPEO_ROOT / NOTES_REPO
+    try:
+        project = resolve_project(project_name)
+    except ValueError as e:
+        typer.echo(f"❌ Error: {e}", err=True)
+        raise typer.Exit(1)
+
+    repo = project.code_repo
+    notes_repo = project.notes_repo
 
     if ticket is None:
         active = list_active_tickets(repo)
@@ -309,18 +325,22 @@ def ticket_open(
             raise typer.Exit(0)
 
     try:
-        project, number = parse_ticket(ticket)
+        ticket_project, number = parse_ticket(ticket)
     except ValueError as e:
         typer.echo(f"❌ Error: {e}", err=True)
         raise typer.Exit(1)
 
-    ticket_id = f"{project}-{number}"
+    ticket_id = f"{ticket_project}-{number}"
     worktree_path = find_worktree_for_ticket(repo, ticket_id) or repo
 
     typer.echo(f"opening worktree: {worktree_path}")
     subprocess.run(["open", "-a", "Terminal", str(worktree_path)])
 
-    workspace = find_workspace_for_ticket(worktree_path, notes_repo)
+    workspace = find_workspace_for_ticket(
+        worktree_path,
+        notes_repo,
+        project.journals_dir,
+    )
     if workspace:
         cursor_bin = shutil.which("cursor")
         if cursor_bin:
@@ -330,6 +350,27 @@ def ticket_open(
             typer.echo(
                 f"⚠️  cursor not found — open manually: cursor {workspace}", err=True
             )
+
+
+@ticket_app.command("list")
+def ticket_list(
+    project_name: Optional[str] = typer.Option(
+        None, "--project", help="Override inferred project"
+    ),
+):
+    try:
+        project = resolve_project(project_name)
+    except ValueError as e:
+        typer.echo(f"❌ Error: {e}", err=True)
+        raise typer.Exit(1)
+
+    active = list_active_tickets(project.code_repo)
+    if not active:
+        typer.echo("no active worktrees found")
+        return
+
+    for ticket in active:
+        typer.echo(f"{ticket.ticket_id:<10}  {ticket.slug}")
 
 
 @pr_inspect_app.callback()
@@ -516,6 +557,10 @@ def main_worktree() -> None:
 
 def main_scopeo() -> None:
     scopeo_app()
+
+
+def main_psk() -> None:
+    psk_app()
 
 
 def main_pr_inspect() -> None:
