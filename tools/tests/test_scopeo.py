@@ -455,29 +455,87 @@ class TestTicketCli:
         assert "worktree" in result.output
         assert "frontend" not in result.output.lower()
 
-    def test_ticket_open_opens_one_terminal_and_workspace(self):
-        worktree = Path("/Scopeo/draftnrun-worktrees/pablo-dra-1049-my-feature")
-        workspace = Path(
-            "/Scopeo/scopeo-notes/journals/1049-my-feature/1049-my-feature.code-workspace"
-        )
+    def _open_ticket(self, worktree, workspace, num_terminals="1", open_cursor=True):
         project = MagicMock(code_repo=Path("/Scopeo/draftnrun"))
         project.notes_repo = Path("/Scopeo/scopeo-notes")
         project.journals_dir = "journals"
+
+        mock_text = MagicMock()
+        mock_text.ask.return_value = num_terminals
+        mock_confirm = MagicMock()
+        mock_confirm.ask.return_value = open_cursor
+        mock_run = MagicMock()
 
         with (
             patch("psk.cli.resolve_project", return_value=project),
             patch("psk.cli.find_worktree_for_ticket", return_value=worktree),
             patch("psk.cli.find_workspace_for_ticket", return_value=workspace),
             patch("psk.cli.shutil.which", return_value="/usr/local/bin/cursor"),
-            patch("psk.cli.subprocess.run") as mock_run,
+            patch("psk.cli.questionary.text", return_value=mock_text),
+            patch("psk.cli.questionary.confirm", return_value=mock_confirm),
+            patch("psk.cli.subprocess.run", mock_run),
         ):
             result = self.runner.invoke(psk_app, ["ticket", "open", "DRA-1049"])
 
+        return result, mock_run
+
+    def test_ticket_open_opens_one_terminal_and_workspace(self):
+        worktree = Path("/Scopeo/draftnrun-worktrees/pablo-dra-1049-my-feature")
+        workspace = Path(
+            "/Scopeo/scopeo-notes/journals/1049-my-feature/1049-my-feature.code-workspace"
+        )
+
+        result, mock_run = self._open_ticket(worktree, workspace)
+
         assert result.exit_code == 0
-        assert [call.args[0] for call in mock_run.call_args_list] == [
+        assert [c.args[0] for c in mock_run.call_args_list] == [
             ["open", "-a", "Terminal", str(worktree)],
             ["/usr/local/bin/cursor", str(workspace)],
         ]
+
+    def test_ticket_open_with_two_terminals_no_cursor(self):
+        worktree = Path("/Scopeo/draftnrun-worktrees/pablo-dra-1049-my-feature")
+        workspace = Path(
+            "/Scopeo/scopeo-notes/journals/1049-my-feature/1049-my-feature.code-workspace"
+        )
+
+        result, mock_run = self._open_ticket(
+            worktree, workspace, num_terminals="2", open_cursor=False,
+        )
+
+        assert result.exit_code == 0
+        assert [c.args[0] for c in mock_run.call_args_list] == [
+            ["open", "-a", "Terminal", str(worktree)],
+            ["open", "-a", "Terminal", str(worktree)],
+        ]
+
+    def test_ticket_open_zero_terminals_only_cursor(self):
+        worktree = Path("/Scopeo/draftnrun-worktrees/pablo-dra-1049-my-feature")
+        workspace = Path(
+            "/Scopeo/scopeo-notes/journals/1049-my-feature/1049-my-feature.code-workspace"
+        )
+
+        result, mock_run = self._open_ticket(
+            worktree, workspace, num_terminals="0", open_cursor=True,
+        )
+
+        assert result.exit_code == 0
+        assert [c.args[0] for c in mock_run.call_args_list] == [
+            ["/usr/local/bin/cursor", str(workspace)],
+        ]
+
+    def test_ticket_open_asks_cursor_even_without_workspace(self):
+        worktree = Path("/Scopeo/draftnrun-worktrees/pablo-dra-1049-my-feature")
+
+        result, mock_run = self._open_ticket(
+            worktree, None, num_terminals="0", open_cursor=True,
+        )
+
+        assert result.exit_code == 0
+        assert [c.args[0] for c in mock_run.call_args_list] == [
+            ["/usr/local/bin/cursor", str(worktree)],
+        ]
+        assert "no workspace found for this ticket" in result.output
 
     def test_ticket_list_uses_inferred_project_repo(self):
         project = MagicMock(code_repo=Path("/Scopeo/draftnrun"))

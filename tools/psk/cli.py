@@ -342,22 +342,44 @@ def ticket_open(
     ticket_id = f"{ticket_project}-{number}"
     worktree_path = find_worktree_for_ticket(repo, ticket_id) or repo
 
-    typer.echo(f"opening worktree: {worktree_path}")
-    subprocess.run(["open", "-a", "Terminal", str(worktree_path)])
-
     workspace = find_workspace_for_ticket(
         worktree_path,
         notes_repo,
         project.journals_dir,
     )
-    if workspace:
+
+    raw_terminals = questionary.text("Terminals to open [1]:").ask()
+    if raw_terminals is None:
+        raise typer.Exit(0)
+    raw_terminals = raw_terminals.strip()
+    try:
+        num_terminals = 1 if raw_terminals == "" else int(raw_terminals)
+        if num_terminals < 0:
+            raise ValueError
+    except ValueError:
+        typer.echo(f"❌ Invalid number: {raw_terminals}", err=True)
+        raise typer.Exit(1)
+
+    open_cursor = questionary.confirm("Open Cursor?", default=True).ask()
+    if open_cursor is None:
+        raise typer.Exit(0)
+
+    for i in range(num_terminals):
+        typer.echo(f"opening terminal {i + 1}: {worktree_path}")
+        subprocess.run(["open", "-a", "Terminal", str(worktree_path)])
+
+    if open_cursor:
         cursor_bin = shutil.which("cursor")
+        target = workspace or worktree_path
+        if workspace is None:
+            typer.echo("⚠️  no workspace found for this ticket — opening worktree")
         if cursor_bin:
-            typer.echo(f"opening workspace: {workspace}")
-            subprocess.run([cursor_bin, str(workspace)])
+            typer.echo(f"opening cursor: {target}")
+            subprocess.run([cursor_bin, str(target)])
         else:
             typer.echo(
-                f"⚠️  cursor not found — open manually: cursor {workspace}", err=True
+                f"⚠️  cursor not found — open manually: cursor {target}",
+                err=True,
             )
 
 
