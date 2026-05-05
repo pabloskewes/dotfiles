@@ -146,3 +146,19 @@ export PATH="$PATH:$ANDROID_SDK_ROOT/platform-tools"
 
 fpath+=~/.zfunc; autoload -Uz compinit; compinit
 export PATH="$HOME/FCFM/Magister/repositorios/FlameGraph:$PATH"
+
+ghost-commit() {
+  local gh_user="${1:-pabloscopeo}"
+  local message="${2:-you shall build}"
+  local user_id name email
+
+  user_id=$(gh api user -H "Authorization: token $(gh auth token --user $gh_user)" -q '.id')
+  name=$(gh api user -H "Authorization: token $(gh auth token --user $gh_user)" -q '.name')
+  email="${user_id}+${gh_user}@users.noreply.github.com"
+
+  GIT_AUTHOR_NAME="$name" GIT_AUTHOR_EMAIL="$email" \
+  GIT_COMMITTER_NAME="$name" GIT_COMMITTER_EMAIL="$email" \
+  git commit --allow-empty -m "$message"
+
+  GITHUB_TOKEN=$(gh auth token --user $gh_user) git push
+}
