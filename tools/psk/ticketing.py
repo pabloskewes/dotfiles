@@ -74,9 +74,6 @@ def build_journal_folder(parts: TicketParts) -> str:
     return f"{parts.number:04d}-{parts.slug}"
 
 
-def resolve_worktree_path_for_repo(repo_root: Path, branch: str) -> Path:
-    return repo_root.parent / f"{repo_root.name}-worktrees" / branch.replace("/", "-")
-
 
 def build_init_plan(
     project: ProjectConfig,
@@ -91,7 +88,7 @@ def build_init_plan(
     resolved_branch = branch or build_branch_name(parts, owner=project.branch_owner)
     resolved_journal_folder = journal_folder or build_journal_folder(parts)
     journal_dir = project.notes_repo / project.journals_dir / resolved_journal_folder
-    worktree = resolve_worktree_path_for_repo(project.code_repo, resolved_branch)
+    worktree = project.get_worktrees_dir() / resolved_branch.replace("/", "-")
     resolved_workspace_file = (
         Path(workspace_file)
         if workspace_file

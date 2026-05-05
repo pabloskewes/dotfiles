@@ -21,10 +21,14 @@ class ProjectConfig:
     journals_dir: str = "journals"
     workspace_code_label: str | None = None
     workspace_notes_label: str | None = None
+    worktrees_dir: Path | None = None
+    match_paths: tuple[Path, ...] = field(default_factory=tuple)
     setup: SetupConfig = field(default_factory=SetupConfig)
 
-    @property
-    def worktrees_dir(self) -> Path:
+    def get_worktrees_dir(self) -> Path:
+        """Return the configured worktrees directory, or derive it from code_repo."""
+        if self.worktrees_dir is not None:
+            return self.worktrees_dir
         return self.code_repo.parent / f"{self.code_repo.name}-worktrees"
 
     @property
@@ -41,10 +45,8 @@ class ProjectConfig:
 
     def matches_path(self, path: Path) -> bool:
         target = path if path.is_dir() else path.parent
-        for candidate in (self.code_repo, self.notes_repo, self.worktrees_dir):
-            if target == candidate or target.is_relative_to(candidate):
-                return True
-        return False
+        candidates = (self.code_repo, self.notes_repo, self.get_worktrees_dir(), *self.match_paths)
+        return any(target == c or target.is_relative_to(c) for c in candidates)
 
 
 def _expand_path(value: str) -> Path:
@@ -54,6 +56,8 @@ def _expand_path(value: str) -> Path:
 def _load_project_file(path: Path) -> ProjectConfig:
     data = tomllib.loads(path.read_text())
     name = data.get("name", path.stem)
+    raw_worktrees_dir = data.get("worktrees_dir")
+    raw_match_paths = data.get("match_paths", [])
     return ProjectConfig(
         name=name,
         code_repo=_expand_path(data["code_repo"]),
@@ -64,6 +68,8 @@ def _load_project_file(path: Path) -> ProjectConfig:
         journals_dir=data.get("journals_dir", "journals"),
         workspace_code_label=data.get("workspace_code_label"),
         workspace_notes_label=data.get("workspace_notes_label"),
+        worktrees_dir=_expand_path(raw_worktrees_dir) if raw_worktrees_dir else None,
+        match_paths=tuple(_expand_path(p) for p in raw_match_paths),
         setup=parse_setup_config(data),
     )
 

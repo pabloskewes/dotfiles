@@ -69,8 +69,24 @@ def create(
 ):
     try:
         repo_root = get_repo_root()
-        path = resolve_worktree_path(branch, worktrees_dir, worktree_path)
     except (RuntimeError, ValueError) as e:
+        typer.echo(f"❌ Error: {e}", err=True)
+        raise typer.Exit(1)
+
+    # Infer project early so we can use its worktrees_dir and run setup later.
+    project = None
+    try:
+        project = resolve_project(cwd=repo_root)
+    except ValueError:
+        pass
+
+    effective_worktrees_dir = worktrees_dir
+    if effective_worktrees_dir is None and worktree_path is None and project is not None:
+        effective_worktrees_dir = str(project.get_worktrees_dir())
+
+    try:
+        path = resolve_worktree_path(branch, effective_worktrees_dir, worktree_path)
+    except ValueError as e:
         typer.echo(f"❌ Error: {e}", err=True)
         raise typer.Exit(1)
 
@@ -86,11 +102,8 @@ def create(
     except SystemExit:
         raise typer.Exit(1)
 
-    try:
-        project = resolve_project(cwd=repo_root)
+    if project is not None:
         run_project_setup(path, repo_root, project.setup)
-    except ValueError:
-        pass  # no project config for this repo — setup is a no-op
 
     typer.echo(f"\n✓ Worktree listo en: {path}")
 

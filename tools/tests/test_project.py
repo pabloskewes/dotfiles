@@ -129,6 +129,124 @@ class TestResolveProject:
             resolve_project(cwd=Path("/Users/pabloskewes"))
 
 
+class TestProjectConfigWorktreesDir:
+    def test_get_worktrees_dir_derives_from_code_repo_when_not_configured(
+        self, monkeypatch, tmp_path
+    ):
+        config_dir = tmp_path / "projects"
+        monkeypatch.setattr(project_module, "CONFIG_DIR", config_dir)
+        _write_project_config(
+            config_dir,
+            name="scopeo",
+            code_repo="/Scopeo/draftnrun",
+            notes_repo="/Scopeo/scopeo-notes",
+            github_repo="Scopeo/draftnrun",
+            linear_workspace_url="https://linear.app/draftnrun",
+        )
+
+        project = resolve_project("scopeo")
+
+        assert project.worktrees_dir is None
+        assert project.get_worktrees_dir() == Path("/Scopeo/draftnrun-worktrees")
+
+    def test_get_worktrees_dir_returns_explicit_value_when_configured(
+        self, monkeypatch, tmp_path
+    ):
+        wt_root = tmp_path / "never-drop"
+        config_dir = tmp_path / "projects"
+        monkeypatch.setattr(project_module, "CONFIG_DIR", config_dir)
+        _write_project_config(
+            config_dir,
+            name="never-drop",
+            code_repo=str(tmp_path / "never-drop" / "main"),
+            notes_repo=str(tmp_path / "never-drop-notes"),
+            github_repo="Scopeo/never-drop",
+            linear_workspace_url="https://linear.app/draftnrun",
+            extra=f'worktrees_dir = "{wt_root}"',
+        )
+
+        project = resolve_project("never-drop")
+
+        assert project.worktrees_dir == wt_root
+        assert project.get_worktrees_dir() == wt_root
+
+    def test_infers_from_worktree_inside_configured_worktrees_dir(
+        self, monkeypatch, tmp_path
+    ):
+        wt_root = tmp_path / "never-drop"
+        wt_root.mkdir()
+        config_dir = tmp_path / "projects"
+        monkeypatch.setattr(project_module, "CONFIG_DIR", config_dir)
+        _write_project_config(
+            config_dir,
+            name="never-drop",
+            code_repo=str(tmp_path / "never-drop" / "main"),
+            notes_repo=str(tmp_path / "never-drop-notes"),
+            github_repo="Scopeo/never-drop",
+            linear_workspace_url="https://linear.app/draftnrun",
+            extra=f'worktrees_dir = "{wt_root}"',
+        )
+
+        resolved = resolve_project(cwd=wt_root / "pablo-nd-123-my-feature")
+
+        assert resolved.name == "never-drop"
+
+
+class TestProjectConfigMatchPaths:
+    def test_match_paths_defaults_to_empty_tuple(self, monkeypatch, tmp_path):
+        config_dir = tmp_path / "projects"
+        monkeypatch.setattr(project_module, "CONFIG_DIR", config_dir)
+        _write_project_config(
+            config_dir,
+            name="scopeo",
+            code_repo="/Scopeo/draftnrun",
+            notes_repo="/Scopeo/scopeo-notes",
+            github_repo="Scopeo/draftnrun",
+            linear_workspace_url="https://linear.app/draftnrun",
+        )
+
+        project = resolve_project("scopeo")
+
+        assert project.match_paths == ()
+
+    def test_match_paths_parsed_from_toml(self, monkeypatch, tmp_path):
+        extra_dir = tmp_path / "never-drop"
+        config_dir = tmp_path / "projects"
+        monkeypatch.setattr(project_module, "CONFIG_DIR", config_dir)
+        _write_project_config(
+            config_dir,
+            name="never-drop",
+            code_repo=str(tmp_path / "never-drop" / "main"),
+            notes_repo=str(tmp_path / "never-drop-notes"),
+            github_repo="Scopeo/never-drop",
+            linear_workspace_url="https://linear.app/draftnrun",
+            extra=f'match_paths = ["{extra_dir}"]',
+        )
+
+        project = resolve_project("never-drop")
+
+        assert project.match_paths == (extra_dir,)
+
+    def test_infers_project_from_match_paths_directory(self, monkeypatch, tmp_path):
+        parent_dir = tmp_path / "never-drop"
+        parent_dir.mkdir()
+        config_dir = tmp_path / "projects"
+        monkeypatch.setattr(project_module, "CONFIG_DIR", config_dir)
+        _write_project_config(
+            config_dir,
+            name="never-drop",
+            code_repo=str(tmp_path / "never-drop" / "main"),
+            notes_repo=str(tmp_path / "never-drop-notes"),
+            github_repo="Scopeo/never-drop",
+            linear_workspace_url="https://linear.app/draftnrun",
+            extra=f'match_paths = ["{parent_dir}"]',
+        )
+
+        resolved = resolve_project(cwd=parent_dir)
+
+        assert resolved.name == "never-drop"
+
+
 class TestProjectConfigSetup:
     def test_no_setup_section_yields_empty_setup(self, monkeypatch, tmp_path):
         config_dir = tmp_path / "projects"

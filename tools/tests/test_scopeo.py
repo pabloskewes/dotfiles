@@ -27,7 +27,6 @@ from psk.ticketing import (
     list_active_tickets,
     parse_ticket,
     render_summary,
-    resolve_worktree_path_for_repo,
     slugify,
 )
 from psk.staging import StagingPlan
@@ -133,15 +132,6 @@ class TestBuildJournalFolder:
         assert build_journal_folder(self._parts(42)) == "0042-some-slug"
 
 
-class TestResolveWorktreePathForRepo:
-    def test_default_path(self):
-        repo = Path("/home/user/Scopeo/draftnrun")
-        result = resolve_worktree_path_for_repo(repo, "pablo/dra-1049-my-feature")
-        assert result == Path(
-            "/home/user/Scopeo/draftnrun-worktrees/pablo-dra-1049-my-feature"
-        )
-
-
 class TestBuildInitPlan:
     def test_returns_single_repo_plan(self, monkeypatch, tmp_path):
         repo = Path("/Scopeo/draftnrun")
@@ -172,6 +162,35 @@ class TestBuildInitPlan:
         )
 
         assert plan.workspace_file == Path("/custom/path.code-workspace")
+
+    def test_explicit_worktrees_dir_is_used(self, monkeypatch, tmp_path):
+        """Bare+sibling layout: worktrees_dir points at the bare repo parent."""
+        repo = tmp_path / "never-drop" / "main"
+        repo.mkdir(parents=True)
+        wt_root = tmp_path / "never-drop"
+        notes = tmp_path / "never-drop-notes"
+        notes.mkdir()
+
+        config_dir = tmp_path / "projects"
+        config_dir.mkdir()
+        monkeypatch.setattr(project_module, "CONFIG_DIR", config_dir)
+        (config_dir / "never-drop.toml").write_text(
+            textwrap.dedent(
+                f"""\
+                name = "never-drop"
+                code_repo = "{repo}"
+                notes_repo = "{notes}"
+                github_repo = "Scopeo/never-drop"
+                linear_workspace_url = "https://linear.app/draftnrun"
+                worktrees_dir = "{wt_root}"
+                """
+            )
+        )
+
+        project = resolve_project("never-drop")
+        plan = _generic_build_init_plan(project, "ND-123", "test")
+
+        assert plan.worktree == wt_root / "pablo-nd-123-test"
 
 
 def _make_plan(

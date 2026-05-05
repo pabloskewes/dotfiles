@@ -74,6 +74,9 @@ plugins=(git)
 
 source $ZSH/oh-my-zsh.sh
 
+# Show the last two path components (e.g., repo/worktree) in prompt.
+PROMPT="%(?:%{$fg_bold[green]%}%1{➜%} :%{$fg_bold[red]%}%1{➜%} ) %{$fg[cyan]%}%2~%{$reset_color%} $(git_prompt_info)"
+
 # User configuration
 
 # export MANPATH="/usr/local/man:$MANPATH"
@@ -108,6 +111,9 @@ export PYENV_ROOT="$HOME/.pyenv"
 [[ -d $PYENV_ROOT/bin ]] && export PATH="$PYENV_ROOT/bin:$PATH"
 eval "$(pyenv init -)"
 
+# Node version manager
+eval "$(fnm env --use-on-cd --shell zsh)"
+
 # Created by `pipx` on 2024-08-13 11:04:24
 export PATH="$PATH:/Users/pabloskewes/.local/bin"
 
@@ -139,3 +145,4 @@ export PATH="$PATH:$ANDROID_SDK_ROOT/cmdline-tools/latest/bin"
 export PATH="$PATH:$ANDROID_SDK_ROOT/platform-tools"
 
 fpath+=~/.zfunc; autoload -Uz compinit; compinit
+export PATH="$HOME/FCFM/Magister/repositorios/FlameGraph:$PATH"

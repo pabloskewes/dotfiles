@@ -33,6 +33,8 @@ Each project file declares the repositories and an optional `[setup]` section th
 | `journals_dir` | `"journals"` | Subfolder inside `notes_repo` for journals |
 | `workspace_code_label` | auto | Cursor workspace label for code repo |
 | `workspace_notes_label` | auto | Cursor workspace label for notes repo |
+| `worktrees_dir` | `<code_repo>/../<name>-worktrees` | Root directory for worktrees. Set explicitly when using a bare-repo + sibling layout |
+| `match_paths` | `[]` | Extra paths (absolute) that `psk` should recognise as belonging to this project when inferring from cwd |
 
 ### `[setup]` section
 
@@ -113,6 +115,36 @@ argv = ["uv", "sync"]
 
 [[setup.run]]
 cwd = "frontend"
+argv = ["pnpm", "install"]
+if_exists = "package.json"
+skip_if_exists = "node_modules"
+```
+
+### Full example — bare + sibling layout (`~/.config/psk/projects/never-drop.toml`)
+
+Repos that use a bare checkout + sibling worktrees (`.bare`, `main`, `feat-x`, …) need two extra fields:
+
+```toml
+name = "never-drop"
+code_repo = "~/Scopeo/never-drop/main"      # the main worktree
+notes_repo = "~/Scopeo/never-drop-notes"
+github_repo = "Scopeo/never-drop"
+linear_workspace_url = "https://linear.app/draftnrun"
+branch_owner = "pablo"
+worktrees_dir = "~/Scopeo/never-drop"       # sibling worktrees live here
+match_paths = ["~/Scopeo/never-drop"]       # so `psk` can infer from ~/Scopeo/never-drop
+
+[[setup.symlinks]]
+source = "apps/web"
+target = "apps/web"
+files = [".env", ".env.local"]
+
+[[setup.symlinks]]
+source = "apps/mobile"
+target = "apps/mobile"
+files = [".env", ".env.local"]
+
+[[setup.run]]
 argv = ["pnpm", "install"]
 if_exists = "package.json"
 skip_if_exists = "node_modules"
