@@ -42,6 +42,8 @@ def create_worktree(branch: str, path: Path, new_branch: bool = False) -> None:
     if result.returncode != 0:
         raise SystemExit(1)
 
+    _ensure_branch_upstream(branch)
+
 
 def list_worktrees() -> list[dict[str, str]]:
     result = subprocess.run(
@@ -74,3 +76,47 @@ def remove_worktree(path: Path) -> None:
     if result.returncode != 0:
         raise SystemExit(1)
     subprocess.run(["git", "worktree", "prune"])
+
+
+def _ensure_branch_upstream(branch: str) -> None:
+    if _branch_has_upstream(branch):
+        return
+
+    remote_branch = _find_unique_remote_branch(branch)
+    if remote_branch is None:
+        return
+
+    subprocess.run(
+        ["git", "branch", "--set-upstream-to", remote_branch, branch],
+        capture_output=True,
+        text=True,
+    )
+
+
+def _branch_has_upstream(branch: str) -> bool:
+    result = subprocess.run(
+        ["git", "rev-parse", "--abbrev-ref", f"{branch}@{{upstream}}"],
+        capture_output=True,
+        text=True,
+    )
+    return result.returncode == 0
+
+
+def _find_unique_remote_branch(branch: str) -> str | None:
+    result = subprocess.run(
+        ["git", "for-each-ref", "refs/remotes", "--format=%(refname:short)"],
+        capture_output=True,
+        text=True,
+    )
+    if result.returncode != 0:
+        return None
+
+    suffix = f"/{branch}"
+    matches = [
+        ref
+        for ref in result.stdout.splitlines()
+        if ref.endswith(suffix) and not ref.endswith("/HEAD")
+    ]
+    if len(matches) != 1:
+        return None
+    return matches[0]

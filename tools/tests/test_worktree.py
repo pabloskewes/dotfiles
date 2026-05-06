@@ -163,7 +163,12 @@ class TestListWorktrees:
 class TestCreateWorktree:
     def test_cmd_without_new_branch(self):
         with patch("subprocess.run") as mock_run:
-            mock_run.return_value = MagicMock(returncode=0)
+            mock_run.side_effect = [
+                MagicMock(returncode=0),
+                MagicMock(returncode=0),
+                MagicMock(returncode=0, stdout="origin/main\n"),
+                MagicMock(returncode=0),
+            ]
             create_worktree("main", Path("/tmp/wt"))
 
         first_call_args = mock_run.call_args_list[0][0][0]
@@ -171,7 +176,11 @@ class TestCreateWorktree:
 
     def test_cmd_with_new_branch(self):
         with patch("subprocess.run") as mock_run:
-            mock_run.return_value = MagicMock(returncode=0)
+            mock_run.side_effect = [
+                MagicMock(returncode=0),
+                MagicMock(returncode=1),
+                MagicMock(returncode=0, stdout=""),
+            ]
             create_worktree("feature/foo", Path("/tmp/wt"), new_branch=True)
 
         first_call_args = mock_run.call_args_list[0][0][0]
@@ -189,6 +198,55 @@ class TestCreateWorktree:
             mock_run.return_value = MagicMock(returncode=1)
             with pytest.raises(SystemExit):
                 create_worktree("main", Path("/tmp/wt"))
+
+    def test_sets_upstream_when_unique_remote_exists(self):
+        with patch("subprocess.run") as mock_run:
+            mock_run.side_effect = [
+                MagicMock(returncode=0),
+                MagicMock(returncode=1),
+                MagicMock(returncode=0, stdout="origin/staging\n"),
+                MagicMock(returncode=0),
+            ]
+            create_worktree("staging", Path("/tmp/wt"))
+
+        calls = [c[0][0] for c in mock_run.call_args_list]
+        assert calls[3] == [
+            "git",
+            "branch",
+            "--set-upstream-to",
+            "origin/staging",
+            "staging",
+        ]
+
+    def test_skips_upstream_when_already_configured(self):
+        with patch("subprocess.run") as mock_run:
+            mock_run.side_effect = [
+                MagicMock(returncode=0),
+                MagicMock(returncode=0),
+            ]
+            create_worktree("staging", Path("/tmp/wt"))
+
+        calls = [c[0][0] for c in mock_run.call_args_list]
+        assert calls == [
+            ["git", "worktree", "add", "/tmp/wt", "staging"],
+            ["git", "rev-parse", "--abbrev-ref", "staging@{upstream}"],
+        ]
+
+    def test_skips_upstream_when_remote_is_ambiguous(self):
+        with patch("subprocess.run") as mock_run:
+            mock_run.side_effect = [
+                MagicMock(returncode=0),
+                MagicMock(returncode=1),
+                MagicMock(returncode=0, stdout="origin/staging\nfork/staging\n"),
+            ]
+            create_worktree("staging", Path("/tmp/wt"))
+
+        calls = [c[0][0] for c in mock_run.call_args_list]
+        assert calls == [
+            ["git", "worktree", "add", "/tmp/wt", "staging"],
+            ["git", "rev-parse", "--abbrev-ref", "staging@{upstream}"],
+            ["git", "for-each-ref", "refs/remotes", "--format=%(refname:short)"],
+        ]
 
 
 # ---------------------------------------------------------------------------
